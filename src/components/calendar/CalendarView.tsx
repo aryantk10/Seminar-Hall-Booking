@@ -30,7 +30,6 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
   const initialBookingsDependency = useMemo(() => JSON.stringify(initialBookings), [initialBookings]);
 
   useEffect(() => {
-    // Load halls from localStorage or use default
     const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
     if (storedHallsString) {
       try {
@@ -60,12 +59,47 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
       .sort((a, b) => parseInt(a.startTime.replace(":", "")) - parseInt(b.startTime.replace(":", "")));
   }, [date, bookings, selectedHallId]);
 
-  const bookedDays = useMemo(() => {
-    return bookings
-    .filter(b => b.status === 'approved') 
-    .filter(b => selectedHallId === "all" || b.hallId === selectedHallId)
-    .map(b => new Date(b.date));
+  const bookingsByDay = useMemo(() => {
+    const grouped: { [dateStr: string]: Booking[] } = {};
+    bookings
+        .filter(b => selectedHallId === "all" || b.hallId === selectedHallId)
+        .forEach(booking => {
+            // Use a specific time like noon to avoid DST issues if just date string is used for new Date()
+            const dateStr = format(new Date(booking.date), "yyyy-MM-dd");
+            if (!grouped[dateStr]) {
+                grouped[dateStr] = [];
+            }
+            grouped[dateStr].push(booking);
+        });
+    return grouped;
   }, [bookings, selectedHallId]);
+
+  const approvedDays = useMemo(() => {
+      return Object.keys(bookingsByDay)
+          .filter(dateStr => bookingsByDay[dateStr].some(b => b.status === 'approved'))
+          .map(dateStr => new Date(dateStr + 'T12:00:00')); // Using T12:00:00 to be safe with timezones
+  }, [bookingsByDay]);
+
+  const pendingOnlyDays = useMemo(() => {
+      return Object.keys(bookingsByDay)
+          .filter(dateStr => {
+              const dayBookings = bookingsByDay[dateStr];
+              return dayBookings.some(b => b.status === 'pending') && !dayBookings.some(b => b.status === 'approved');
+          })
+          .map(dateStr => new Date(dateStr + 'T12:00:00'));
+  }, [bookingsByDay]);
+
+  const rejectedOnlyDays = useMemo(() => {
+      return Object.keys(bookingsByDay)
+          .filter(dateStr => {
+              const dayBookings = bookingsByDay[dateStr];
+              return dayBookings.some(b => b.status === 'rejected') &&
+                     !dayBookings.some(b => b.status === 'approved') &&
+                     !dayBookings.some(b => b.status === 'pending');
+          })
+          .map(dateStr => new Date(dateStr + 'T12:00:00'));
+  }, [bookingsByDay]);
+
 
   const getStatusBadge = (status: Booking['status']) => {
     switch (status) {
@@ -81,7 +115,12 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
       <Card className="lg:col-span-2 shadow-lg">
         <CardHeader>
           <CardTitle>Booking Calendar</CardTitle>
-          <CardDescription>Select a date to view bookings. Days with approved bookings are highlighted.</CardDescription>
+          <CardDescription>
+            Select a date to view bookings. Days are color-coded by status: 
+            <span className="inline-block w-3 h-3 rounded-full mx-1" style={{backgroundColor: 'hsl(var(--primary))'}} /> Approved, 
+            <span className="inline-block w-3 h-3 rounded-full mx-1" style={{backgroundColor: 'hsl(var(--accent))'}} /> Pending, 
+            <span className="inline-block w-3 h-3 rounded-full mx-1" style={{backgroundColor: 'hsl(var(--muted))'}} /> Rejected.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
           <Calendar
@@ -89,8 +128,16 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
             selected={date}
             onSelect={setDate}
             className="rounded-md border p-4"
-            modifiers={{ booked: bookedDays }}
-            modifiersStyles={{ booked: { border: "2px solid hsl(var(--primary))", borderRadius: "var(--radius)" } }}
+            modifiers={{ 
+              approved: approvedDays,
+              pending: pendingOnlyDays,
+              rejected: rejectedOnlyDays,
+            }}
+            modifiersStyles={{ 
+              approved: { border: "2px solid hsl(var(--primary))", borderRadius: "var(--radius)" },
+              pending: { border: "2px solid hsl(var(--accent))", borderRadius: "var(--radius)" },
+              rejected: { border: "2px solid hsl(var(--muted))", borderRadius: "var(--radius)", opacity: 0.6 },
+            }}
             disabled={(d) => d < new Date(new Date().setDate(new Date().getDate()-1))} 
           />
         </CardContent>
@@ -157,3 +204,4 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
     </div>
   );
 }
+
