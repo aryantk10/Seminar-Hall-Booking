@@ -1,4 +1,3 @@
-
 "use client";
 import BookingForm from "@/components/booking/BookingForm";
 import { halls as allHalls } from "@/lib/data";
@@ -40,6 +39,11 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
     return <div className="text-center py-10"><p>Hall not found.</p> <Link href="/dashboard/halls" className="text-primary hover:underline">Go back to halls list</Link></div>;
   }
 
+  // Ensure the placeholder URL matches the component's width and height if hall.image is not present
+  const imageWidth = 600;
+  const imageHeight = 400;
+  const placeholderImageSrc = `https://placehold.co/${imageWidth}x${imageHeight}.png`;
+
   return (
     <div className="space-y-8">
       <Link href="/dashboard/halls" className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -51,11 +55,11 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
         <div className="md:flex">
           <div className="md:w-1/3">
              <Image
-              src={hall.image || "https://placehold.co/600x400.png"}
+              src={hall.image || placeholderImageSrc}
               alt={hall.name}
               data-ai-hint={hall.dataAiHint || "seminar hall"}
-              width={600}
-              height={400}
+              width={imageWidth}
+              height={imageHeight}
               className="object-cover w-full h-full"
             />
           </div>

@@ -1,4 +1,3 @@
-
 "use client";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,15 +12,20 @@ interface HallCardProps {
 }
 
 export default function HallCard({ hall }: HallCardProps) {
+  // Ensure the placeholder URL matches the component's width and height if hall.image is not present
+  const imageWidth = 600;
+  const imageHeight = 400;
+  const placeholderImageSrc = `https://placehold.co/${imageWidth}x${imageHeight}.png`;
+
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       <CardHeader className="p-0 relative">
         <Image
-          src={hall.image || "https://placehold.co/600x400.png"}
+          src={hall.image || placeholderImageSrc}
           alt={hall.name}
           data-ai-hint={hall.dataAiHint || "seminar hall"}
-          width={600}
-          height={400}
+          width={imageWidth}
+          height={imageHeight}
           className="aspect-video w-full object-cover"
         />
          {hall.amenities && hall.amenities.length > 0 && (

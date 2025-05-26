@@ -71,7 +71,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="flex flex-col md:flex-row gap-6 items-center">
             <Image 
-              src="https://placehold.co/600x400.png" 
+              src="https://placehold.co/300x200.png" 
               alt="Featured Hall" 
               data-ai-hint="modern lecture"
               width={300} 
