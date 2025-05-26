@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Booking, Hall } from "@/lib/types"; // Import Hall
 import { halls as defaultAllHallsData } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"; // Removed LabelList for now
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Clock, XCircle, TrendingUp, Building } from "lucide-react";
 
@@ -50,10 +50,12 @@ export default function AdminReportsPage() {
         setCurrentAllHallsData(JSON.parse(storedHallsString));
       } catch (error) {
         console.error("Failed to parse configured halls for reports", error);
+        // If parsing fails, reset to default and save it.
         localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHallsData));
         setCurrentAllHallsData(defaultAllHallsData);
       }
     } else {
+      // If not in localStorage, save the default.
       localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHallsData));
       setCurrentAllHallsData(defaultAllHallsData);
     }
@@ -78,11 +80,11 @@ export default function AdminReportsPage() {
     bookings.forEach(booking => {
       counts[booking.hallId] = (counts[booking.hallId] || 0) + 1;
     });
-    return currentAllHallsData.map(hall => ({ // Use currentAllHallsData
+    return currentAllHallsData.map(hall => ({ 
       name: hall.name.length > 20 ? hall.name.substring(0,17) + "..." : hall.name,
       bookings: counts[hall.id] || 0,
     })).sort((a,b) => b.bookings - a.bookings);
-  }, [bookings, currentAllHallsData]); // Add currentAllHallsData as dependency
+  }, [bookings, currentAllHallsData]); 
 
   const bookingStatusChartData: StatusChartData[] = useMemo(() => [
     { name: 'Approved', value: reportStats.approvedCount },
@@ -119,7 +121,7 @@ export default function AdminReportsPage() {
             <Card className="bg-card shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Approved</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CheckCircle className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{reportStats.approvedCount}</div>
@@ -128,7 +130,7 @@ export default function AdminReportsPage() {
             <Card className="bg-card shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                <Clock className="h-4 w-4 text-yellow-500" />
+                <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{reportStats.pendingCount}</div>
@@ -137,7 +139,7 @@ export default function AdminReportsPage() {
             <Card className="bg-card shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-                <XCircle className="h-4 w-4 text-red-500" />
+                <XCircle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{reportStats.rejectedCount}</div>
