@@ -19,6 +19,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...(config.resolve.fallback || {}), // Spread existing fallbacks if any
+        async_hooks: false,
+        fs: false,
+        tls: false,
+        net: false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;

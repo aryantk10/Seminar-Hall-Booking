@@ -1,9 +1,10 @@
+
 "use client";
 import Header from "@/components/shared/Header";
 import SidebarNav from "@/components/dashboard/SidebarNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react"; // Added Suspense
 import { Loader2 } from "lucide-react";
 import { SidebarInset } from "@/components/ui/sidebar";
 
@@ -41,7 +42,9 @@ export default function DashboardLayout({
           <SidebarNav />
           <SidebarInset className="flex-1">
             <main className="p-4 md:p-6 lg:p-8">
-             {children}
+             <Suspense fallback={<div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> <span className="ml-2">Loading page...</span></div>}>
+               {children}
+             </Suspense>
             </main>
           </SidebarInset>
         </div>
