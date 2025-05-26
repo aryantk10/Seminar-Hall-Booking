@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react"; // Added useMemo
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { Booking, Hall } from "@/lib/types";
@@ -11,6 +12,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, HelpCircle, XCircle, Building } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+// Dummy Select component imports (remove if shadcn Select is fully integrated and working)
+import { Select as ShadcnSelect, SelectContent as ShadcnSelectContent, SelectItem as ShadcnSelectItem, SelectTrigger as ShadcnSelectTrigger, SelectValue as ShadcnSelectValue } from "@/components/ui/select";
+
 
 interface CalendarViewProps {
   initialBookings?: Booking[];
@@ -23,12 +27,21 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
   const [selectedHallId, setSelectedHallId] = useState<string | "all">("all");
   const [allHalls, setAllHalls] = useState<Hall[]>(allHallsData);
 
+  // Create a stable string representation of initialBookings for the useEffect dependency
+  // This prevents loops when initialBookings is the default empty array (which is a new reference on each render)
+  const initialBookingsDependency = useMemo(() => JSON.stringify(initialBookings), [initialBookings]);
+
   useEffect(() => {
-    // Load bookings from localStorage or use initial prop
+    // Parse the stable string back to an array for use in the effect logic
+    const currentInitialBookings = JSON.parse(initialBookingsDependency) as Booking[];
+    
     const storedBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
-    const allBookingsData = initialBookings.length > 0 ? initialBookings : storedBookings;
-    setBookings(allBookingsData.map(b => ({ ...b, date: new Date(b.date) })));
-  }, [initialBookings]);
+    
+    // If currentInitialBookings (derived from the prop) has content, use it; otherwise, use storedBookings.
+    const dataToProcess = currentInitialBookings.length > 0 ? currentInitialBookings : storedBookings;
+    
+    setBookings(dataToProcess.map(b => ({ ...b, date: new Date(b.date) })));
+  }, [initialBookingsDependency]); // Depend on the stable stringified version
 
   const bookingsForSelectedDate = useMemo(() => {
     if (!date) return [];
@@ -82,17 +95,17 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
           {showHallFilter && (
              <div className="pt-2">
                 <label htmlFor="hallFilter" className="text-sm font-medium text-muted-foreground mr-2">Filter by Hall:</label>
-                <Select value={selectedHallId} onValueChange={setSelectedHallId}>
-                    <SelectTrigger id="hallFilter" className="w-full md:w-[200px]">
-                        <SelectValue placeholder="All Halls" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Halls</SelectItem>
+                <ShadcnSelect value={selectedHallId} onValueChange={setSelectedHallId}>
+                    <ShadcnSelectTrigger id="hallFilter" className="w-full md:w-[200px]">
+                        <ShadcnSelectValue placeholder="All Halls" />
+                    </ShadcnSelectTrigger>
+                    <ShadcnSelectContent>
+                        <ShadcnSelectItem value="all">All Halls</ShadcnSelectItem>
                         {allHalls.map(hall => (
-                            <SelectItem key={hall.id} value={hall.id}>{hall.name}</SelectItem>
+                            <ShadcnSelectItem key={hall.id} value={hall.id}>{hall.name}</ShadcnSelectItem>
                         ))}
-                    </SelectContent>
-                </Select>
+                    </ShadcnSelectContent>
+                </ShadcnSelect>
              </div>
           )}
         </CardHeader>
@@ -136,9 +149,6 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
   );
 }
 
-// Dummy Select component if not using shadcn's
-const Select: React.FC<any> = ({ children, ...props }) => <select {...props} className="p-2 border rounded-md text-sm bg-input">{children}</select>;
-const SelectTrigger: React.FC<any> = ({ children, ...props }) => <div {...props}>{children}</div>; // Placeholder
-const SelectValue: React.FC<any> = ({ children, ...props }) => <span {...props}>{children}</span>; // Placeholder
-const SelectContent: React.FC<any> = ({ children, ...props }) => <div {...props}>{children}</div>; // Placeholder
-const SelectItem: React.FC<any> = ({ children, ...props }) => <option {...props}>{children}</option>;
+// Note: Removed dummy Select components as Shadcn/ui ones are imported.
+// If Shadcn Select was not the issue, these dummy components were not the cause of the loop.
+// The primary fix is the useMemo and useEffect dependency change.
