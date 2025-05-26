@@ -1,0 +1,52 @@
+
+"use client";
+import type { User } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+
+interface AuthContextType {
+  user: User | null;
+  login: (userData: User) => void;
+  logout: () => void;
+  loading: boolean;
+}
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Try to load user from localStorage on initial load
+    const storedUser = localStorage.getItem('hallHubUser');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser) as User;
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Failed to parse stored user:", error);
+        localStorage.removeItem('hallHubUser');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem('hallHubUser', JSON.stringify(userData));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('hallHubUser');
+    router.push('/'); // Redirect to landing page on logout
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
