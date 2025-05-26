@@ -9,11 +9,20 @@ export default function FacultyLoginPage() {
       description="Access your Hall Hub account to manage bookings."
       footerContent={
         <>
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="font-medium text-primary hover:underline">
-            Register here
-          </Link>
-          .
+          <div>
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="font-medium text-primary hover:underline">
+              Register here
+            </Link>
+            .
+          </div>
+          <div className="mt-2">
+            Are you an administrator?{" "}
+            <Link href="/login/admin" className="font-medium text-primary hover:underline">
+              Admin Login
+            </Link>
+            .
+          </div>
         </>
       }
     >
