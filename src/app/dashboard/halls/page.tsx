@@ -1,25 +1,48 @@
-"use client"; // Make it a client component
 
-import { useState, useMemo } from "react";
+"use client"; 
+
+import { useState, useMemo, useEffect } from "react";
 import HallCard from "@/components/hall/HallCard";
-import { halls as allHallsData } from "@/lib/data";
+import { halls as defaultHallsData } from "@/lib/data";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import type { Hall } from "@/lib/types";
 
+const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";
+
 export default function HallsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentHallsData, setCurrentHallsData] = useState<Hall[]>(defaultHallsData);
+
+  useEffect(() => {
+    const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
+    if (storedHallsString) {
+      try {
+        setCurrentHallsData(JSON.parse(storedHallsString));
+      } catch (error) {
+        console.error("Failed to parse configured halls from localStorage", error);
+        // Fallback to default and (re)store it
+        localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultHallsData));
+        setCurrentHallsData(defaultHallsData);
+      }
+    } else {
+      // If nothing in localStorage, use default and store it
+      localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultHallsData));
+      setCurrentHallsData(defaultHallsData);
+    }
+  }, []); // Load once on mount
+
 
   const filteredHalls = useMemo(() => {
     if (!searchTerm) {
-      return allHallsData;
+      return currentHallsData;
     }
-    return allHallsData.filter(hall =>
+    return currentHallsData.filter(hall =>
       hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       hall.block.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (hall.amenities && hall.amenities.some(amenity => amenity.toLowerCase().includes(searchTerm.toLowerCase())))
     );
-  }, [searchTerm]);
+  }, [searchTerm, currentHallsData]);
 
   return (
     <div className="space-y-8">

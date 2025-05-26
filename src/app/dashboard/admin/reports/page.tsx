@@ -1,13 +1,16 @@
+
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import type { Booking } from "@/lib/types";
-import { halls as allHallsData } from "@/lib/data";
+import type { Booking, Hall } from "@/lib/types"; // Import Hall
+import { halls as defaultAllHallsData } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"; // Removed LabelList for now
 import { useRouter } from "next/navigation";
 import { CheckCircle, Clock, XCircle, TrendingUp, Building } from "lucide-react";
+
+const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";
 
 interface BookingsPerHallChartData {
   name: string;
@@ -21,7 +24,7 @@ interface StatusChartData {
 
 const STATUS_COLORS_FOR_CHART = {
   approved: 'hsl(var(--primary))', 
-  pending: 'hsl(var(--muted))', // using muted for a less prominent color
+  pending: 'hsl(var(--muted))', 
   rejected: 'hsl(var(--destructive))',
 };
 
@@ -31,12 +34,30 @@ export default function AdminReportsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentAllHallsData, setCurrentAllHallsData] = useState<Hall[]>(defaultAllHallsData);
+
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'admin')) {
       router.push("/dashboard");
       return;
     }
+
+    // Load configured halls
+    const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
+    if (storedHallsString) {
+      try {
+        setCurrentAllHallsData(JSON.parse(storedHallsString));
+      } catch (error) {
+        console.error("Failed to parse configured halls for reports", error);
+        localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHallsData));
+        setCurrentAllHallsData(defaultAllHallsData);
+      }
+    } else {
+      localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHallsData));
+      setCurrentAllHallsData(defaultAllHallsData);
+    }
+
     if (user && user.role === 'admin') {
       const allStoredBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
       setBookings(allStoredBookings.map(b => ({ ...b, date: new Date(b.date) })));
@@ -57,11 +78,11 @@ export default function AdminReportsPage() {
     bookings.forEach(booking => {
       counts[booking.hallId] = (counts[booking.hallId] || 0) + 1;
     });
-    return allHallsData.map(hall => ({
+    return currentAllHallsData.map(hall => ({ // Use currentAllHallsData
       name: hall.name.length > 20 ? hall.name.substring(0,17) + "..." : hall.name,
       bookings: counts[hall.id] || 0,
     })).sort((a,b) => b.bookings - a.bookings);
-  }, [bookings]);
+  }, [bookings, currentAllHallsData]); // Add currentAllHallsData as dependency
 
   const bookingStatusChartData: StatusChartData[] = useMemo(() => [
     { name: 'Approved', value: reportStats.approvedCount },
