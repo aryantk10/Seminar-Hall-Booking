@@ -28,4 +28,5 @@ export interface User {
   email: string;
   name: string;
   role: 'faculty' | 'admin';
+  avatarDataUrl?: string; // Added for profile picture
 }

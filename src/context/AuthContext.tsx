@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   login: (userData: User) => void;
   logout: () => void;
+  updateUser: (updatedFields: Partial<User>) => void; // Added updateUser
   loading: boolean;
 }
 
@@ -34,8 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('hallHubUser', JSON.stringify(userData));
+    // Ensure avatarDataUrl is part of the initial login if it exists in userData
+    const userToStore: User = {
+      ...userData,
+      avatarDataUrl: userData.avatarDataUrl || undefined,
+    };
+    setUser(userToStore);
+    localStorage.setItem('hallHubUser', JSON.stringify(userToStore));
   };
 
   const logout = () => {
@@ -44,8 +50,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/'); // Redirect to landing page on logout
   };
 
+  const updateUser = (updatedFields: Partial<User>) => {
+    if (user) {
+      const newUser = { ...user, ...updatedFields };
+      setUser(newUser);
+      localStorage.setItem('hallHubUser', JSON.stringify(newUser));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

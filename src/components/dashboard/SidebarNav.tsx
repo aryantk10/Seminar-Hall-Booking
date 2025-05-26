@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -59,16 +60,23 @@ export default function SidebarNav() {
     <Sidebar collapsible="icon" variant="sidebar" side="left">
         <SidebarHeader className="p-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
+            <Link href="/dashboard/profile" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-full mr-2 cursor-pointer hover:bg-sidebar-accent/50 rounded-md p-1">
               <Avatar className="h-8 w-8">
-                 <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
+                 <AvatarImage src={user.avatarDataUrl || `https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
                  <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <span className="text-sm font-semibold text-sidebar-foreground">{user.name}</span>
                 <span className="text-xs text-sidebar-foreground/70">{user.role}</span>
               </div>
-            </div>
+            </Link>
+             {/* Icon-only avatar when collapsed */}
+            <Link href="/dashboard/profile" className="hidden items-center gap-2 group-data-[collapsible=icon]:flex w-full mr-2 cursor-pointer hover:bg-sidebar-accent/50 rounded-md p-1 justify-center">
+               <Avatar className="h-8 w-8">
+                 <AvatarImage src={user.avatarDataUrl || `https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
+                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+              </Avatar>
+            </Link>
             <SidebarTrigger className="hidden md:flex group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:mx-auto" />
           </div>
         </SidebarHeader>
