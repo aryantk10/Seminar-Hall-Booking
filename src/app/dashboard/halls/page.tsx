@@ -1,31 +1,55 @@
+"use client"; // Make it a client component
+
+import { useState, useMemo } from "react";
 import HallCard from "@/components/hall/HallCard";
-import { halls } from "@/lib/data";
+import { halls as allHallsData } from "@/lib/data";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-// This page will be client component to handle search if implemented. For now, static.
+import type { Hall } from "@/lib/types";
 
 export default function HallsPage() {
-  // In a real app, halls data might be fetched.
-  // Add search/filter functionality later if needed.
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredHalls = useMemo(() => {
+    if (!searchTerm) {
+      return allHallsData;
+    }
+    return allHallsData.filter(hall =>
+      hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      hall.block.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (hall.amenities && hall.amenities.some(amenity => amenity.toLowerCase().includes(searchTerm.toLowerCase())))
+    );
+  }, [searchTerm]);
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Seminar Halls</h1>
-          <p className="text-muted-foreground">Browse and select a hall for your event.</p>
+          <p className="text-muted-foreground">Browse and select a hall for your event. Search by name, block, or amenities.</p>
         </div>
-        {/* <div className="relative w-full md:w-1/3">
+        <div className="relative w-full md:w-1/3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder="Search halls..." className="pl-10" />
-        </div> */}
+          <Input
+            placeholder="Search halls by name, block, amenities..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {halls.map((hall) => (
-          <HallCard key={hall.id} hall={hall} />
-        ))}
-      </div>
+      {filteredHalls.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredHalls.map((hall) => (
+            <HallCard key={hall.id} hall={hall} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-center py-10">
+          No halls found matching your search criteria.
+        </p>
+      )}
     </div>
   );
 }

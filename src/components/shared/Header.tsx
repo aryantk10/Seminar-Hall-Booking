@@ -13,14 +13,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/components/ui/sidebar';
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
   const { user, logout, loading } = useAuth();
   const { toggleSidebar, isMobile } = useSidebar();
+  const router = useRouter(); 
 
   const getInitials = (name: string = "") => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
   }
+
+  const handleViewProfile = () => {
+    router.push('/dashboard/profile');
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -63,6 +69,11 @@ export default function Header() {
                     </p>
                   </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleViewProfile}>
+                  <UserCircle className="mr-2 h-4 w-4" />
+                  <span>View Profile</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />

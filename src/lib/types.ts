@@ -6,6 +6,7 @@ export interface Hall {
   capacity?: number;
   image?: string;
   dataAiHint?: string;
+  amenities?: string[]; // Added
 }
 
 export interface Booking {

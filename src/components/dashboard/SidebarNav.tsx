@@ -10,6 +10,8 @@ import {
   LogOut,
   Settings,
   BookMarked,
+  UserCircle, 
+  BarChart3, 
 } from "lucide-react";
 import {
   Sidebar,
@@ -19,13 +21,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton,
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -34,16 +32,17 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   roles: ('faculty' | 'admin')[];
-  subItems?: NavItem[];
   tooltip?: string;
 }
 
 const navItems: NavItem[] = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ['faculty', 'admin'], tooltip: "Dashboard Overview" },
+  { href: "/dashboard/profile", icon: UserCircle, label: "My Profile", roles: ['faculty', 'admin'], tooltip: "View Your Profile" },
   { href: "/dashboard/halls", icon: Building2, label: "Seminar Halls", roles: ['faculty'], tooltip: "View Halls" },
   { href: "/dashboard/my-bookings", icon: BookMarked, label: "My Bookings", roles: ['faculty'], tooltip: "Your Bookings" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar", roles: ['faculty', 'admin'], tooltip: "Booking Calendar" },
   { href: "/dashboard/admin/requests", icon: ClipboardList, label: "Booking Requests", roles: ['admin'], tooltip: "Manage Requests" },
+  { href: "/dashboard/admin/reports", icon: BarChart3, label: "Reports", roles: ['admin'], tooltip: "View Reports" }, 
 ];
 
 export default function SidebarNav() {
@@ -59,7 +58,6 @@ export default function SidebarNav() {
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
         <SidebarHeader className="p-2">
-          {/* Sidebar Trigger is now in the main Header for mobile, this is for desktop */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
               <Avatar className="h-8 w-8">
@@ -89,20 +87,6 @@ export default function SidebarNav() {
                     <span>{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
-                {item.subItems && (
-                   <SidebarMenuSub>
-                    {item.subItems.map((subItem) => (
-                       <SidebarMenuSubItem key={subItem.href}>
-                        <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                           <Link href={subItem.href}>
-                            <subItem.icon className="h-4 w-4" />
-                            <span>{subItem.label}</span>
-                           </Link>
-                         </SidebarMenuSubButton>
-                       </SidebarMenuSubItem>
-                    ))}
-                   </SidebarMenuSub>
-                )}
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
