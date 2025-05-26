@@ -1,3 +1,4 @@
+
 "use client";
 import BookingForm from "@/components/booking/BookingForm";
 import { halls as allHalls } from "@/lib/data";
@@ -6,15 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Users, MapPin } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react"; // Added 'use'
 
-export default function BookHallPage({ params }: { params: { hallId: string } }) {
+interface PageRouteParams {
+  hallId: string;
+}
+
+export default function BookHallPage({ params: paramsPromise }: { params: Promise<PageRouteParams> }) {
+  const params = use(paramsPromise); // Unwrap the promise
+  const { hallId } = params; // Destructure hallId from the resolved params
+
   const [hall, setHall] = useState<Hall | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const foundHall = allHalls.find((h) => h.id === params.hallId);
+    const foundHall = allHalls.find((h) => h.id === hallId); // Use unwrapped hallId
     if (foundHall) {
       setHall(foundHall);
     }
@@ -22,7 +30,7 @@ export default function BookHallPage({ params }: { params: { hallId: string } })
     const storedBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
     setBookings(storedBookings.map(b => ({...b, date: new Date(b.date)}))); // Ensure date is a Date object
     setLoading(false);
-  }, [params.hallId]);
+  }, [hallId]); // Depend on unwrapped hallId
 
 
   if (loading) {
