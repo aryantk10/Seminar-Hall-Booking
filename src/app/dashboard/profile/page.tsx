@@ -97,15 +97,6 @@ export default function ProfilePage() {
               className="object-cover"
             />
             <AvatarFallback className="text-4xl">{getInitials(user.name)}</AvatarFallback>
-             <Button 
-                variant="outline" 
-                size="icon" 
-                className="absolute bottom-1 right-1 h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity bg-background/70 hover:bg-background"
-                onClick={() => fileInputRef.current?.click()}
-                title="Change Profile Picture"
-              >
-                <UploadCloud className="h-4 w-4 text-primary" />
-              </Button>
           </Avatar>
           <Input
             type="file"
@@ -115,18 +106,25 @@ export default function ProfilePage() {
             className="hidden"
           />
           <CardTitle className="text-3xl font-bold">{user.name}</CardTitle>
-          <CardDescription className="text-lg text-muted-foreground capitalize">
+          <CardDescription className="text-lg text-muted-foreground capitalize mb-3">
             {user.role} at Hall Hub
           </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6 p-6">
-          {user.avatarDataUrl && (
-            <div className="text-center mb-4">
+          <div className="flex justify-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <UploadCloud className="mr-2 h-4 w-4" /> Change Picture
+            </Button>
+            {user.avatarDataUrl && (
               <Button variant="ghost" size="sm" onClick={handleRemovePicture} className="text-destructive hover:text-destructive/80">
                 <Trash2 className="mr-2 h-4 w-4" /> Remove Picture
               </Button>
-            </div>
-          )}
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6 p-6 pt-4"> {/* Reduced top padding for CardContent */}
           <div className="flex items-center p-4 border rounded-lg bg-background hover:bg-muted/50 transition-colors shadow-sm">
             <UserIcon className="mr-4 h-6 w-6 text-primary flex-shrink-0" />
             <div>
@@ -160,3 +158,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
