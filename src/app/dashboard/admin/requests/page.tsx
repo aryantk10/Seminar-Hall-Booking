@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useState } from "react";
 import type { Booking } from "@/lib/types";
@@ -40,7 +41,7 @@ export default function AdminRequestsPage() {
     const updatedBookings = bookings.map(b => 
       b.id === bookingId ? { ...b, status: newStatus } : b
     );
-    setBookings(updatedBookings);
+    setBookings(updatedBookings); // This will trigger re-render and AdminBookingControls will re-evaluate conflicts
     localStorage.setItem("hallHubBookings", JSON.stringify(updatedBookings));
   };
 
@@ -95,7 +96,11 @@ export default function AdminRequestsPage() {
                     <TableCell className="max-w-[250px] truncate" title={booking.purpose}>{booking.purpose}</TableCell>
                     <TableCell>{format(new Date(booking.requestedAt), "PPp")}</TableCell>
                     <TableCell className="text-right">
-                      <AdminBookingControls booking={booking} onUpdateBookingStatus={updateBookingStatus} />
+                      <AdminBookingControls 
+                        booking={booking} 
+                        allBookings={bookings}
+                        onUpdateBookingStatus={updateBookingStatus} 
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

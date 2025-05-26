@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +28,7 @@ import type { Hall, Booking } from "@/lib/types";
 import { timeSlots } from "@/lib/data";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { isBookingConflict } from "@/lib/bookingUtils"; // Import the utility
 
 const bookingFormSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
@@ -45,7 +47,7 @@ const bookingFormSchema = z.object({
 
 interface BookingFormProps {
   hall: Hall;
-  existingBookings?: Booking[]; // Pass existing bookings for conflict checking (simplified)
+  existingBookings?: Booking[]; 
 }
 
 export default function BookingForm({ hall, existingBookings = [] }: BookingFormProps) {
@@ -71,29 +73,29 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
     } else {
       setAvailableEndTimes(timeSlots);
     }
-    form.setValue("endTime", ""); // Reset end time when start time changes
+    form.setValue("endTime", ""); 
   }, [selectedStartTime, form]);
 
+  const isSlotBooked = (selectedDate: Date, selectedStartTime: string, selectedEndTime: string): boolean => {
+    const newBookingDetails = {
+      hallId: hall.id,
+      date: selectedDate,
+      startTime: selectedStartTime,
+      endTime: selectedEndTime,
+    };
 
-  // This is a very simplified conflict check. A real app would do this on the server.
-  const isSlotBooked = (date: Date, startTime: string, endTime: string): boolean => {
-    return existingBookings.some(booking => {
-      const bookingDateStr = format(new Date(booking.date), "yyyy-MM-dd");
-      const selectedDateStr = format(date, "yyyy-MM-dd");
-      
-      if (booking.hallId === hall.id && bookingDateStr === selectedDateStr && booking.status === 'approved') {
-        // Check for time overlap
-        const bookingStart = parseInt(booking.startTime.replace(":", ""));
-        const bookingEnd = parseInt(booking.endTime.replace(":", ""));
-        const selectedStart = parseInt(startTime.replace(":", ""));
-        const selectedEnd = parseInt(endTime.replace(":", ""));
-
-        return Math.max(selectedStart, bookingStart) < Math.min(selectedEnd, bookingEnd);
+    return existingBookings.some(existingBooking => {
+      if (existingBooking.status === 'approved') {
+        // Ensure existingBooking.date is treated as a Date object for comparison
+        const existingBookingForCheck = {
+          ...existingBooking,
+          date: new Date(existingBooking.date), 
+        };
+        return isBookingConflict(newBookingDetails, existingBookingForCheck);
       }
       return false;
     });
   };
-
 
   function onSubmit(values: z.infer<typeof bookingFormSchema>) {
     if (!user) {
@@ -105,14 +107,13 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
     if (isSlotBooked(values.date, values.startTime, values.endTime)) {
       toast({
         title: "Booking Conflict",
-        description: "The selected time slot is already booked or overlaps with an existing booking. Please choose another time.",
+        description: "The selected time slot is already booked or overlaps with an existing approved booking. Please choose another time.",
         variant: "destructive",
       });
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
     setTimeout(() => {
       const newBooking: Booking = {
         id: `booking-${Math.random().toString(36).substring(7)}`,
@@ -128,8 +129,6 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
         requestedAt: new Date(),
       };
 
-      // In a real app, save this to DB and update global state/cache.
-      // For mock, we can store it in localStorage or context if needed for other components.
       const currentBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
       localStorage.setItem("hallHubBookings", JSON.stringify([...currentBookings, newBooking]));
       
@@ -137,7 +136,7 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
         title: "Booking Request Submitted",
         description: `Your request for ${hall.name} on ${format(values.date, "PPP")} from ${values.startTime} to ${values.endTime} has been submitted for approval.`,
       });
-      router.push("/dashboard/my-bookings"); // Redirect to a page where user can see their bookings
+      router.push("/dashboard/my-bookings"); 
       setIsLoading(false);
     }, 1500);
   }
@@ -176,7 +175,7 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } // Disable past dates
+                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) } 
                       initialFocus
                     />
                   </PopoverContent>
