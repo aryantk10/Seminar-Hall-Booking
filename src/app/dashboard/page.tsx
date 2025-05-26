@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Building2, CalendarDays, ClipboardList, Sparkles, UserCheck } from "lucide-react";
+import { ArrowRight, Building2, CalendarDays, ClipboardList, UserCheck } from "lucide-react";
 import Image from "next/image";
 
 export default function DashboardPage() {
@@ -13,14 +13,13 @@ export default function DashboardPage() {
 
   const welcomeMessage = `Welcome back, ${user.name}!`;
   const roleDescription = user.role === 'faculty' 
-    ? "Manage your seminar hall bookings, explore available halls, and utilize AI tools to enhance your event planning."
+    ? "Manage your seminar hall bookings and explore available halls."
     : "Oversee and manage all seminar hall booking requests. Ensure smooth operations and scheduling.";
 
   const facultyActions = [
     { title: "View Seminar Halls", description: "Explore available halls and their details.", href: "/dashboard/halls", icon: Building2 },
     { title: "Check Calendar", description: "View current bookings and hall availability.", href: "/dashboard/calendar", icon: CalendarDays },
     { title: "My Bookings", description: "Manage your existing booking requests.", href: "/dashboard/my-bookings", icon: UserCheck },
-    { title: "AI Event Augmentor", description: "Get AI-powered suggestions for your events.", href: "/dashboard/augment-event", icon: Sparkles },
   ];
 
   const adminActions = [

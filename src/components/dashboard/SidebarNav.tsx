@@ -8,7 +8,6 @@ import {
   CalendarDays,
   ClipboardList,
   LogOut,
-  Sparkles,
   Settings,
   BookMarked,
 } from "lucide-react";
@@ -44,7 +43,6 @@ const navItems: NavItem[] = [
   { href: "/dashboard/halls", icon: Building2, label: "Seminar Halls", roles: ['faculty'], tooltip: "View Halls" },
   { href: "/dashboard/my-bookings", icon: BookMarked, label: "My Bookings", roles: ['faculty'], tooltip: "Your Bookings" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar", roles: ['faculty', 'admin'], tooltip: "Booking Calendar" },
-  { href: "/dashboard/augment-event", icon: Sparkles, label: "AI Event Augmentor", roles: ['faculty'], tooltip: "AI Suggestions" },
   { href: "/dashboard/admin/requests", icon: ClipboardList, label: "Booking Requests", roles: ['admin'], tooltip: "Manage Requests" },
 ];
 
