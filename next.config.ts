@@ -24,13 +24,14 @@ const nextConfig: NextConfig = {
     config: WebpackConfiguration,
     { isServer }: { isServer: boolean }
   ) => {
-    // Prevent 'async_hooks' from being bundled on the client
+    // Prevent Node.js specific modules from being bundled on the client
     if (!isServer) {
       config.resolve = {
         ...config.resolve,
         fallback: {
           ...config.resolve?.fallback,
           async_hooks: false,
+          fs: false, // Add fallback for 'fs' module
         },
       };
     }
