@@ -30,7 +30,11 @@ const formSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export default function RegistrationForm() {
+interface RegistrationFormProps {
+  isAdminRegistration?: boolean;
+}
+
+export default function RegistrationForm({ isAdminRegistration = false }: RegistrationFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
@@ -51,19 +55,21 @@ export default function RegistrationForm() {
     // Simulate API call for registration
     setTimeout(() => {
       const newUser: User = {
-        id: `faculty-${Math.random().toString(36).substring(7)}`, // Generate a random ID
+        id: `${isAdminRegistration ? 'admin' : 'faculty'}-${Math.random().toString(36).substring(7)}`,
         name: values.name,
         email: values.email,
-        role: "faculty",
+        role: isAdminRegistration ? "admin" : "faculty",
       };
       
       // In a real app, you would save this user to a database.
-      // For this mock, we'll just log them in directly.
+      // For this mock, we'll just log them in directly if it's faculty registration.
+      // For admin, we might want a different flow or just show success.
+      // For now, admin registration will also log in.
       login(newUser);
       
       toast({
         title: "Registration Successful",
-        description: `Welcome, ${newUser.name}! Your account has been created.`,
+        description: `Welcome, ${newUser.name}! Your ${isAdminRegistration ? 'admin ' : ''}account has been created.`,
       });
       router.push("/dashboard");
       setIsLoading(false);
@@ -127,7 +133,7 @@ export default function RegistrationForm() {
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Register
+          Register {isAdminRegistration ? "Admin Account" : "Account"}
         </Button>
       </form>
     </Form>

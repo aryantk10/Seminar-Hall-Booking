@@ -9,11 +9,20 @@ export default function AdminLoginPage() {
       description="Access the Hall Hub admin panel."
        footerContent={
         <>
-          Are you a faculty member?{" "}
-          <Link href="/login/faculty" className="font-medium text-primary hover:underline">
-            Login here
-          </Link>
-          .
+          <div>
+            Need to register a new admin account?{" "}
+            <Link href="/login/admin/register" className="font-medium text-primary hover:underline">
+              Register Admin
+            </Link>
+            .
+          </div>
+          <div className="mt-2">
+            Are you a faculty member?{" "}
+            <Link href="/login/faculty" className="font-medium text-primary hover:underline">
+              Faculty Login
+            </Link>
+            .
+          </div>
         </>
       }
     >
