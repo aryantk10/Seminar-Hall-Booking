@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +35,8 @@ interface RegistrationFormProps {
   isAdminRegistration?: boolean;
 }
 
+const REGISTERED_USERS_STORAGE_KEY = "hallHubRegisteredUsers";
+
 export default function RegistrationForm({ isAdminRegistration = false }: RegistrationFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -52,8 +55,22 @@ export default function RegistrationForm({ isAdminRegistration = false }: Regist
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate API call for registration
+    
     setTimeout(() => {
+      const allRegisteredUsers = JSON.parse(localStorage.getItem(REGISTERED_USERS_STORAGE_KEY) || "[]") as User[];
+      const emailExists = allRegisteredUsers.some(u => u.email.toLowerCase() === values.email.toLowerCase());
+
+      if (emailExists) {
+        toast({
+          title: "Registration Failed",
+          description: "This email address is already in use. Please use a different email.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        form.setError("email", { type: "manual", message: "This email address is already in use." });
+        return;
+      }
+
       const newUser: User = {
         id: `${isAdminRegistration ? 'admin' : 'faculty'}-${Math.random().toString(36).substring(7)}`,
         name: values.name,
@@ -61,10 +78,9 @@ export default function RegistrationForm({ isAdminRegistration = false }: Regist
         role: isAdminRegistration ? "admin" : "faculty",
       };
       
-      // In a real app, you would save this user to a database.
-      // For this mock, we'll just log them in directly if it's faculty registration.
-      // For admin, we might want a different flow or just show success.
-      // For now, admin registration will also log in.
+      allRegisteredUsers.push(newUser);
+      localStorage.setItem(REGISTERED_USERS_STORAGE_KEY, JSON.stringify(allRegisteredUsers));
+      
       login(newUser);
       
       toast({

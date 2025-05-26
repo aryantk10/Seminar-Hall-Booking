@@ -10,8 +10,11 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Label } from "@/components/ui/label"; // Added for form-like structure
+import { Label } from "@/components/ui/label"; 
 import { cn } from "@/lib/utils";
+import type { User } from "@/lib/types";
+
+const REGISTERED_USERS_STORAGE_KEY = "hallHubRegisteredUsers";
 
 export default function ProfilePage() {
   const { user, loading: authLoading, updateUser } = useAuth();
@@ -55,7 +58,7 @@ export default function ProfilePage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // Limit to 2MB for dataURL feasibility
+      if (file.size > 2 * 1024 * 1024) { 
         toast({
           title: "Image Too Large",
           description: "Please select an image smaller than 2MB.",
@@ -97,7 +100,7 @@ export default function ProfilePage() {
   }
 
   const handleEditToggle = () => {
-    if (isEditing) { // Means 'Cancel' was effectively clicked or save completed
+    if (isEditing) { 
       setEditableName(user.name);
       setEditableEmail(user.email);
       setNameError(null);
@@ -106,8 +109,7 @@ export default function ProfilePage() {
     setIsEditing(!isEditing);
   };
 
-  const validateEmail = (email: string) => {
-    // Basic email validation regex
+  const validateEmailFormat = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
@@ -120,21 +122,50 @@ export default function ProfilePage() {
       setNameError(null);
     }
 
-    if (!editableEmail.trim()) {
+    const newEmail = editableEmail.trim().toLowerCase();
+    const currentEmail = user.email.toLowerCase();
+
+    if (!newEmail) {
       setEmailError("Email Address cannot be empty.");
       isValid = false;
-    } else if (!validateEmail(editableEmail)) {
+    } else if (!validateEmailFormat(newEmail)) {
       setEmailError("Please enter a valid email address.");
       isValid = false;
+    } else if (newEmail !== currentEmail) {
+      // Check for email uniqueness if it has changed
+      const allRegisteredUsers = JSON.parse(localStorage.getItem(REGISTERED_USERS_STORAGE_KEY) || "[]") as User[];
+      const emailTaken = allRegisteredUsers.some(u => u.email.toLowerCase() === newEmail && u.id !== user.id);
+      if (emailTaken) {
+        setEmailError("This email address is already in use by another account.");
+        isValid = false;
+      } else {
+        setEmailError(null);
+      }
     } else {
-      setEmailError(null);
+      setEmailError(null); // Email hasn't changed or passed validation
     }
 
     if (isValid) {
-      updateUser({ name: editableName, email: editableEmail });
+      const updatedFields: Partial<User> = { name: editableName.trim() };
+      if (newEmail !== currentEmail) {
+        updatedFields.email = editableEmail.trim(); // Save with original casing if preferred, though comparison is case-insensitive
+      }
+      
+      updateUser(updatedFields);
+
+      // If email was changed, update it in the global registered users list
+      if (newEmail !== currentEmail && updatedFields.email) {
+        const allRegisteredUsers = JSON.parse(localStorage.getItem(REGISTERED_USERS_STORAGE_KEY) || "[]") as User[];
+        const userIndex = allRegisteredUsers.findIndex(u => u.id === user.id);
+        if (userIndex > -1) {
+          allRegisteredUsers[userIndex].email = updatedFields.email;
+          localStorage.setItem(REGISTERED_USERS_STORAGE_KEY, JSON.stringify(allRegisteredUsers));
+        }
+      }
+
       toast({
         title: "Profile Updated",
-        description: "Your name and email have been updated.",
+        description: "Your details have been updated.",
       });
       setIsEditing(false);
     }

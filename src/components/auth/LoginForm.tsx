@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +30,8 @@ interface LoginFormProps {
   userType: 'faculty' | 'admin';
 }
 
+const REGISTERED_USERS_STORAGE_KEY = "hallHubRegisteredUsers";
+
 export default function LoginForm({ userType }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -47,19 +50,25 @@ export default function LoginForm({ userType }: LoginFormProps) {
     setIsLoading(true);
     // Simulate API call
     setTimeout(() => {
-      // Mock users - in a real app, this would be an API call
       const mockFacultyUser: User = { id: "faculty1", email: "faculty@example.com", name: "Dr. Faculty", role: "faculty" };
       const mockAdminUser: User = { id: "admin1", email: "admin@example.com", name: "Admin User", role: "admin" };
 
       let foundUser: User | null = null;
 
-      if (userType === 'faculty' && values.email === mockFacultyUser.email && values.password === "password") {
+      if (userType === 'faculty' && values.email.toLowerCase() === mockFacultyUser.email.toLowerCase() && values.password === "password") {
         foundUser = mockFacultyUser;
-      } else if (userType === 'admin' && values.email === mockAdminUser.email && values.password === "password") {
+      } else if (userType === 'admin' && values.email.toLowerCase() === mockAdminUser.email.toLowerCase() && values.password === "password") {
         foundUser = mockAdminUser;
       }
 
       if (foundUser) {
+        // Ensure mock users are in the registered users list for consistency
+        const allRegisteredUsers = JSON.parse(localStorage.getItem(REGISTERED_USERS_STORAGE_KEY) || "[]") as User[];
+        if (!allRegisteredUsers.some(u => u.id === foundUser!.id)) {
+          allRegisteredUsers.push(foundUser!);
+          localStorage.setItem(REGISTERED_USERS_STORAGE_KEY, JSON.stringify(allRegisteredUsers));
+        }
+        
         login(foundUser);
         toast({
           title: "Login Successful",
