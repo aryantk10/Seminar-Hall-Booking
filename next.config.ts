@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
           async_hooks: false,
           fs: false, // Add fallback for 'fs' module
           tls: false, // Add fallback for 'tls' module
+          net: false, // Add fallback for 'net' module
         },
       };
     }
