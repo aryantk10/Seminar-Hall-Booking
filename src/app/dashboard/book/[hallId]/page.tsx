@@ -1,9 +1,9 @@
 "use client";
 import BookingForm from "@/components/booking/BookingForm";
-import { halls as allHalls } from "@/lib/data";
+import { halls as allHalls, allPossibleAmenities } from "@/lib/data";
 import type { Hall, Booking } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Users, MapPin, Sparkles, CheckSquare } from "lucide-react";
+import { ArrowLeft, Users, MapPin, Sparkles, CheckSquare, XCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState, use } from "react";
@@ -76,17 +76,25 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
               )}
             </CardHeader>
             <CardContent className="p-0">
-              {hall.amenities && hall.amenities.length > 0 && (
+              {allPossibleAmenities.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold flex items-center mb-2 text-foreground">
                     <Sparkles className="mr-2 h-5 w-5 text-primary" /> Amenities
                   </h3>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
-                    {hall.amenities.map(amenity => (
-                      <li key={amenity} className="flex items-center text-sm py-1">
-                        <CheckSquare className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" /> {amenity}
-                      </li>
-                    ))}
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                    {allPossibleAmenities.map(masterAmenity => {
+                      const isAvailable = hall.amenities && hall.amenities.includes(masterAmenity);
+                      return (
+                        <li key={masterAmenity} className={`flex items-center text-sm py-1 ${isAvailable ? 'text-foreground' : 'text-muted-foreground opacity-70'}`}>
+                          {isAvailable ? (
+                            <CheckSquare className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                          ) : (
+                            <XCircle className="mr-2 h-4 w-4 text-red-500 flex-shrink-0" />
+                          )}
+                          {masterAmenity}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               )}
