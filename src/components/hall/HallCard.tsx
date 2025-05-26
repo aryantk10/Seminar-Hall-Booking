@@ -1,3 +1,4 @@
+
 "use client";
 import Image from "next/image";
 import Link from "next/link";
@@ -6,12 +7,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import type { Hall } from "@/lib/types";
 import { Users, MapPin, ArrowRight, Sparkles } from "lucide-react"; 
 import { Badge } from "@/components/ui/badge"; 
+import { useAuth } from "@/hooks/useAuth"; // Import useAuth
 
 interface HallCardProps {
   hall: Hall;
 }
 
 export default function HallCard({ hall }: HallCardProps) {
+  const { user } = useAuth(); // Get current user
   // Ensure the placeholder URL matches the component's width and height if hall.image is not present
   const imageWidth = 600;
   const imageHeight = 400;
@@ -67,13 +70,15 @@ export default function HallCard({ hall }: HallCardProps) {
          )}
 
       </CardContent>
-      <CardFooter className="p-6 pt-0">
-        <Button asChild className="w-full">
-          <Link href={`/dashboard/book/${hall.id}`}>
-            Book Now <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </CardFooter>
+      {user && user.role !== 'admin' && (
+        <CardFooter className="p-6 pt-0">
+          <Button asChild className="w-full">
+            <Link href={`/dashboard/book/${hall.id}`}>
+              Book Now <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

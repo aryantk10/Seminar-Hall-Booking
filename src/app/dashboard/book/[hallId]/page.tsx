@@ -4,7 +4,8 @@ import BookingForm from "@/components/booking/BookingForm";
 import { halls as defaultAllHalls, allPossibleAmenities } from "@/lib/data";
 import type { Hall, Booking } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Users, MapPin, Sparkles, CheckSquare, XCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeft, Users, MapPin, Sparkles, CheckSquare, XCircle, Info } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState, use } from "react";
@@ -125,7 +126,7 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold flex items-center mb-2 text-foreground">
                     <Sparkles className="mr-2 h-5 w-5 text-primary" /> Amenities
-                    {user?.role === 'admin' && <span className="text-xs text-muted-foreground ml-2">(Click to toggle)</span>}
+                    {user?.role === 'admin' && <span className="text-xs text-muted-foreground ml-2">(Click to toggle availability)</span>}
                   </h3>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
                     {allPossibleAmenities.map(masterAmenity => {
@@ -158,11 +159,24 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
                   </ul>
                 </div>
               )}
-              <p className="mb-6 text-muted-foreground">
-                Please fill out the form below to request a booking for this hall.
-                Ensure all details are accurate. Your request will be sent for admin approval.
-              </p>
-              <BookingForm hall={hall} existingBookings={bookings} />
+
+              {user && user.role === 'admin' ? (
+                <Alert variant="default" className="bg-primary/10 border-primary/30">
+                  <Info className="h-5 w-5 text-primary" />
+                  <AlertTitle className="text-primary">Admin View</AlertTitle>
+                  <AlertDescription>
+                    As an administrator, you can manage hall amenities above. Booking functionality is available for faculty members.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <>
+                  <p className="mb-6 text-muted-foreground">
+                    Please fill out the form below to request a booking for this hall.
+                    Ensure all details are accurate. Your request will be sent for admin approval.
+                  </p>
+                  <BookingForm hall={hall} existingBookings={bookings} />
+                </>
+              )}
             </CardContent>
           </div>
         </div>
