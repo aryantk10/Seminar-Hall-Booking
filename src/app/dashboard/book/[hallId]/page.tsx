@@ -1,3 +1,4 @@
+
 "use client";
 import BookingForm from "@/components/booking/BookingForm";
 import { halls as allHalls } from "@/lib/data";
@@ -52,7 +53,7 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
              <Image
               src={hall.image || "https://placehold.co/600x400.png"}
               alt={hall.name}
-              data-ai-hint={hall.dataAiHint || "conference room"}
+              data-ai-hint={hall.dataAiHint || "seminar hall"}
               width={600}
               height={400}
               className="object-cover w-full h-full"

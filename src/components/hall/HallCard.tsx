@@ -1,3 +1,4 @@
+
 "use client";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +19,7 @@ export default function HallCard({ hall }: HallCardProps) {
         <Image
           src={hall.image || "https://placehold.co/600x400.png"}
           alt={hall.name}
-          data-ai-hint={hall.dataAiHint || "lecture hall"}
+          data-ai-hint={hall.dataAiHint || "seminar hall"}
           width={600}
           height={400}
           className="aspect-video w-full object-cover"
