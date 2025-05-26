@@ -4,7 +4,7 @@ import Header from "@/components/shared/Header";
 import SidebarNav from "@/components/dashboard/SidebarNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect, Suspense } from "react"; // Added Suspense
+import { useEffect, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { SidebarInset } from "@/components/ui/sidebar";
 
@@ -32,7 +32,7 @@ export default function DashboardLayout({
 
   if (!user) {
     // This helps prevent rendering the layout briefly if redirecting
-    return null; 
+    return null;
   }
 
   return (
@@ -40,12 +40,13 @@ export default function DashboardLayout({
         <Header />
         <div className="flex flex-1">
           <SidebarNav />
-          <SidebarInset className="flex-1">
-            <main className="p-4 md:p-6 lg:p-8">
+          <SidebarInset className="flex-1"> {/* SidebarInset renders as a <main> tag and is a flex-col container */}
+            <div className="h-16 flex-shrink-0" /> {/* Spacer for the sticky header */}
+            <div className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto"> {/* Scrollable content area with padding */}
              <Suspense fallback={<div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /> <span className="ml-2">Loading page...</span></div>}>
                {children}
              </Suspense>
-            </main>
+            </div>
           </SidebarInset>
         </div>
       </div>

@@ -11,8 +11,8 @@ import {
   LogOut,
   Settings,
   BookMarked,
-  UserCircle, 
-  BarChart3, 
+  UserCircle,
+  BarChart3,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard/my-bookings", icon: BookMarked, label: "My Bookings", roles: ['faculty'], tooltip: "Your Bookings" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar", roles: ['faculty', 'admin'], tooltip: "Booking Calendar" },
   { href: "/dashboard/admin/requests", icon: ClipboardList, label: "Booking Requests", roles: ['admin'], tooltip: "Manage Requests" },
-  { href: "/dashboard/admin/reports", icon: BarChart3, label: "Reports", roles: ['admin'], tooltip: "View Reports" }, 
+  { href: "/dashboard/admin/reports", icon: BarChart3, label: "Reports", roles: ['admin'], tooltip: "View Reports" },
 ];
 
 export default function SidebarNav() {
@@ -58,7 +58,8 @@ export default function SidebarNav() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
-        <SidebarHeader className="p-2">
+      <div className="flex h-full flex-col pt-16"> {/* Wrapper to push content below main header */}
+        <SidebarHeader className="p-2 flex-shrink-0">
           <div className="flex items-center justify-between">
             <Link href="/dashboard/profile" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden w-full mr-2 cursor-pointer hover:bg-sidebar-accent/50 rounded-md p-1">
               <Avatar className="h-8 w-8">
@@ -80,8 +81,8 @@ export default function SidebarNav() {
             <SidebarTrigger className="hidden md:flex group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:mx-auto" />
           </div>
         </SidebarHeader>
-        <SidebarSeparator />
-        <SidebarContent className="p-2">
+        <SidebarSeparator className="flex-shrink-0" />
+        <SidebarContent className="p-2"> {/* Already flex-1 and overflow-auto */}
           <SidebarMenu>
             {navItems.filter(item => item.roles.includes(user.role)).map((item) => (
               <SidebarMenuItem key={item.href}>
@@ -99,8 +100,8 @@ export default function SidebarNav() {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarSeparator />
-        <SidebarFooter className="p-2">
+        <SidebarSeparator className="flex-shrink-0" />
+        <SidebarFooter className="p-2 flex-shrink-0">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton tooltip="Settings (Coming Soon)" disabled>
@@ -116,6 +117,7 @@ export default function SidebarNav() {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
+      </div>
     </Sidebar>
   );
 }
