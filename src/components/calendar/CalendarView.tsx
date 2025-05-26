@@ -116,10 +116,11 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
         <CardHeader>
           <CardTitle>Booking Calendar</CardTitle>
           <CardDescription>
-            Select a date to view bookings. Days are color-coded by status: 
-            <span className="inline-block w-3 h-3 rounded-full mx-1" style={{backgroundColor: 'hsl(var(--primary))'}} /> Approved, 
-            <span className="inline-block w-3 h-3 rounded-full mx-1" style={{backgroundColor: 'hsl(var(--accent))'}} /> Pending, 
-            <span className="inline-block w-3 h-3 rounded-full mx-1" style={{backgroundColor: 'hsl(var(--muted))'}} /> Rejected.
+            Days are highlighted by their highest-priority booking status:
+            <span className="inline-block w-3 h-3 rounded-full mx-1 align-middle" style={{backgroundColor: 'hsl(var(--primary))'}} /> Approved (takes precedence),
+            then <span className="inline-block w-3 h-3 rounded-full mx-1 align-middle" style={{backgroundColor: 'hsl(var(--accent))'}} /> Pending,
+            then <span className="inline-block w-3 h-3 rounded-full mx-1 align-middle" style={{backgroundColor: 'hsl(var(--muted))'}} /> Rejected.
+            Click a day to see all its bookings.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
