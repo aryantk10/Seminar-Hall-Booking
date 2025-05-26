@@ -39,7 +39,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ['faculty', 'admin'], tooltip: "Dashboard Overview" },
   { href: "/dashboard/profile", icon: UserCircle, label: "My Profile", roles: ['faculty', 'admin'], tooltip: "View Your Profile" },
-  { href: "/dashboard/halls", icon: Building2, label: "Seminar Halls", roles: ['faculty'], tooltip: "View Halls" },
+  { href: "/dashboard/halls", icon: Building2, label: "Seminar Halls", roles: ['faculty', 'admin'], tooltip: "View Halls" },
   { href: "/dashboard/my-bookings", icon: BookMarked, label: "My Bookings", roles: ['faculty'], tooltip: "Your Bookings" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar", roles: ['faculty', 'admin'], tooltip: "Booking Calendar" },
   { href: "/dashboard/admin/requests", icon: ClipboardList, label: "Booking Requests", roles: ['admin'], tooltip: "Manage Requests" },
