@@ -1,4 +1,3 @@
-
 "use client";
 import { useEffect, useState } from "react";
 import type { Booking } from "@/lib/types";
@@ -9,13 +8,17 @@ import { format } from "date-fns";
 import AdminBookingControls from "@/components/admin/AdminBookingControls";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { CheckCircle, Clock, XCircle, HelpCircle } from "lucide-react";
+import { CheckCircle, Clock, XCircle, HelpCircle, Trash2, Bell } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 export default function AdminRequestsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<string[]>([]);
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== 'admin')) {
@@ -24,6 +27,10 @@ export default function AdminRequestsPage() {
     }
     if (user && user.role === 'admin') {
       const allBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
+      // Check for any new cancellations by faculty
+      const storedNotifications = JSON.parse(localStorage.getItem("adminNotifications") || "[]") as string[];
+      setNotifications(storedNotifications);
+      
       setBookings(
         allBookings
         .map(b => ({ ...b, date: new Date(b.date) })) // Ensure date is Date object
@@ -37,12 +44,26 @@ export default function AdminRequestsPage() {
     setLoading(false);
   }, [user, authLoading, router]);
 
-  const updateBookingStatus = (bookingId: string, newStatus: 'approved' | 'rejected') => {
+  const updateBookingStatus = (bookingId: string, newStatus: 'approved' | 'rejected' | 'cancelled') => {
     const updatedBookings = bookings.map(b => 
       b.id === bookingId ? { ...b, status: newStatus } : b
     );
-    setBookings(updatedBookings); // This will trigger re-render and AdminBookingControls will re-evaluate conflicts
+    setBookings(updatedBookings);
     localStorage.setItem("hallHubBookings", JSON.stringify(updatedBookings));
+
+    // If admin cancels a booking, notify the faculty
+    if (newStatus === 'cancelled') {
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking) {
+        const facultyNotification = {
+          userId: booking.userId,
+          message: `Your booking for ${booking.hallName} on ${format(new Date(booking.date), "PPP")} has been cancelled by admin.`,
+          timestamp: new Date(),
+        };
+        const userNotifications = JSON.parse(localStorage.getItem("userNotifications") || "[]");
+        localStorage.setItem("userNotifications", JSON.stringify([...userNotifications, facultyNotification]));
+      }
+    }
   };
 
   const getStatusBadge = (status: Booking['status']) => {
@@ -50,10 +71,15 @@ export default function AdminRequestsPage() {
       case 'approved': return <Badge variant="default"><CheckCircle className="mr-1 h-3 w-3" />Approved</Badge>;
       case 'pending': return <Badge variant="secondary"><Clock className="mr-1 h-3 w-3" />Pending</Badge>;
       case 'rejected': return <Badge variant="destructive"><XCircle className="mr-1 h-3 w-3" />Rejected</Badge>;
+      case 'cancelled': return <Badge variant="outline"><Trash2 className="mr-1 h-3 w-3" />Cancelled</Badge>;
       default: return <Badge variant="outline"><HelpCircle className="mr-1 h-3 w-3" />Unknown</Badge>;
     }
   };
 
+  const clearNotifications = () => {
+    setNotifications([]);
+    localStorage.setItem("adminNotifications", "[]");
+  };
 
   if (loading || authLoading) {
     return <p>Loading booking requests...</p>;
@@ -67,6 +93,27 @@ export default function AdminRequestsPage() {
 
   return (
     <div className="space-y-8">
+      {notifications.length > 0 && (
+        <Card className="bg-muted">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              <Bell className="inline-block w-4 h-4 mr-2" />
+              Notifications
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={clearNotifications}>
+              Clear All
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {notifications.map((notification, index) => (
+                <li key={index} className="text-sm">{notification}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl font-bold">Pending Booking Requests</CardTitle>
@@ -113,7 +160,7 @@ export default function AdminRequestsPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Processed Booking Requests</CardTitle>
-          <CardDescription>History of approved and rejected requests.</CardDescription>
+          <CardDescription>History of approved, rejected, and cancelled requests.</CardDescription>
         </CardHeader>
         <CardContent>
            {processedBookings.length === 0 ? (
@@ -127,6 +174,7 @@ export default function AdminRequestsPage() {
                   <TableHead>Date & Time</TableHead>
                   <TableHead>Purpose</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -137,6 +185,13 @@ export default function AdminRequestsPage() {
                     <TableCell>{format(new Date(booking.date), "PPP")} <br/> {booking.startTime} - {booking.endTime}</TableCell>
                     <TableCell className="max-w-[250px] truncate" title={booking.purpose}>{booking.purpose}</TableCell>
                     <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <AdminBookingControls 
+                        booking={booking} 
+                        allBookings={bookings}
+                        onUpdateBookingStatus={updateBookingStatus} 
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

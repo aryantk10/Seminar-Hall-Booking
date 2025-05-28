@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { auth } from "@/lib/api";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -46,44 +46,54 @@ export default function LoginForm({ userType }: LoginFormProps) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      const mockFacultyUser: User = { id: "faculty1", email: "faculty@example.com", name: "Dr. Faculty", role: "faculty" };
-      const mockAdminUser: User = { id: "admin1", email: "admin@example.com", name: "Admin User", role: "admin" };
-
-      let foundUser: User | null = null;
-
-      if (userType === 'faculty' && values.email.toLowerCase() === mockFacultyUser.email.toLowerCase() && values.password === "password") {
-        foundUser = mockFacultyUser;
-      } else if (userType === 'admin' && values.email.toLowerCase() === mockAdminUser.email.toLowerCase() && values.password === "password") {
-        foundUser = mockAdminUser;
-      }
-
-      if (foundUser) {
-        // Ensure mock users are in the registered users list for consistency
-        const allRegisteredUsers = JSON.parse(localStorage.getItem(REGISTERED_USERS_STORAGE_KEY) || "[]") as User[];
-        if (!allRegisteredUsers.some(u => u.id === foundUser!.id)) {
-          allRegisteredUsers.push(foundUser!);
-          localStorage.setItem(REGISTERED_USERS_STORAGE_KEY, JSON.stringify(allRegisteredUsers));
-        }
-        
-        login(foundUser);
+    try {
+      const response = await auth.login(values);
+      const userData = response.data;
+      
+      // Check if the user has the correct role
+      if (userType === 'admin' && userData.role !== 'admin') {
         toast({
-          title: "Login Successful",
-          description: `Welcome back, ${foundUser.name}!`,
-        });
-        router.push("/dashboard");
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password.",
+          title: "Access Denied",
+          description: "This login is for administrators only.",
           variant: "destructive",
         });
+        setIsLoading(false);
+        return;
       }
+
+      if (userType === 'faculty' && userData.role !== 'faculty') {
+        toast({
+          title: "Access Denied",
+          description: "This login is for faculty members only.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Store the token
+      localStorage.setItem('token', userData.token);
+      
+      // Login the user
+      login(userData);
+      
+      toast({
+        title: "Login Successful",
+        description: `Welcome back, ${userData.name}!`,
+      });
+      
+      router.push("/dashboard");
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.response?.data?.message || "Invalid email or password.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   }
 
   return (

@@ -1,4 +1,3 @@
-
 export interface Hall {
   id: string;
   name: string;
@@ -19,7 +18,7 @@ export interface Booking {
   startTime: string;
   endTime: string;
   purpose: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   requestedAt: Date;
 }
 
@@ -28,5 +27,6 @@ export interface User {
   email: string;
   name: string;
   role: 'faculty' | 'admin';
+  department?: string;
   avatarDataUrl?: string; // Added for profile picture
 }
