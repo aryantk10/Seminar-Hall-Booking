@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 9002",
+    "dev": "next dev -p 4000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "jest --coverage",
+    "ci": "npm run lint && npm run test && npm run build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

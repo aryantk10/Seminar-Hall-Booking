@@ -2,13 +2,36 @@ version: '3.8'
 
 services:
   frontend:
-    build: .
+    image: ghcr.io/${GITHUB_REPOSITORY}/frontend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "9003:9002"
+      - "9002:9002"
     environment:
       - NODE_ENV=production
-    networks:
-      - app-network
+    depends_on:
+      - backend
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY}/backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/seminar-hall-booking}
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
 
   jenkins:
     image: jenkins/jenkins:lts
@@ -81,4 +104,5 @@ volumes:
   jenkins_home:
   prometheus_data:
   grafana_data:
-  elasticsearch_data: 
+  elasticsearch_data:
+  mongodb_data: 

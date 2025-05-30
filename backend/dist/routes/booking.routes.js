@@ -7,16 +7,18 @@ const express_1 = __importDefault(require("express"));
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const booking_controller_1 = require("../controllers/booking.controller");
 const router = express_1.default.Router();
-// Protected routes (all authenticated users)
-router.use(auth_middleware_1.protect);
-// Routes for all authenticated users
-router.post('/', booking_controller_1.createBooking);
-router.get('/my-bookings', booking_controller_1.getMyBookings);
-router.get('/:id', booking_controller_1.getBookingById);
-// Admin only routes
-router.get('/', (0, auth_middleware_1.authorize)('admin'), booking_controller_1.getBookings);
-router.put('/:id', (0, auth_middleware_1.authorize)('admin'), booking_controller_1.updateBooking);
-router.delete('/:id', (0, auth_middleware_1.authorize)('admin'), booking_controller_1.deleteBooking);
-router.put('/:id/approve', (0, auth_middleware_1.authorize)('admin'), booking_controller_1.approveBooking);
-router.put('/:id/reject', (0, auth_middleware_1.authorize)('admin'), booking_controller_1.rejectBooking);
+router.route('/')
+    .post(auth_middleware_1.protect, booking_controller_1.createBooking)
+    .get(auth_middleware_1.protect, (0, auth_middleware_1.authorize)('admin'), booking_controller_1.getBookings);
+router.route('/my').get(auth_middleware_1.protect, booking_controller_1.getBookings);
+router.route('/:id')
+    .get(auth_middleware_1.protect, booking_controller_1.getBookingById)
+    .post(auth_middleware_1.protect, (0, auth_middleware_1.authorize)('admin'), booking_controller_1.approveBooking)
+    .delete(auth_middleware_1.protect, (0, auth_middleware_1.authorize)('admin'), booking_controller_1.rejectBooking);
+router.route('/:id/cancel')
+    .post(auth_middleware_1.protect, booking_controller_1.cancelBooking);
+router.route('/:id/approve')
+    .post(auth_middleware_1.protect, (0, auth_middleware_1.authorize)('admin'), booking_controller_1.approveBooking);
+router.route('/:id/reject')
+    .post(auth_middleware_1.protect, (0, auth_middleware_1.authorize)('admin'), booking_controller_1.rejectBooking);
 exports.default = router;

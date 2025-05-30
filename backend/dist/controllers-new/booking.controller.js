@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.rejectBooking = exports.approveBooking = exports.cancelBooking = exports.deleteBooking = exports.updateBooking = exports.getBookingById = exports.getMyBookings = exports.getBookings = exports.createBooking = void 0;
+exports.rejectBooking = exports.approveBooking = exports.deleteBooking = exports.updateBooking = exports.getBookingById = exports.getMyBookings = exports.getBookings = exports.createBooking = void 0;
 const booking_model_1 = __importDefault(require("../models/booking.model"));
 const hall_model_1 = __importDefault(require("../models/hall.model"));
 // Check for booking conflicts
@@ -140,37 +140,11 @@ const deleteBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.deleteBooking = deleteBooking;
-const cancelBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const booking = yield booking_model_1.default.findById(req.params.id);
-        if (!booking) {
-            res.status(404).json({ message: 'Booking not found' });
-            return;
-        }
-        // Check if the user is the owner of the booking
-        if (booking.user.toString() !== req.user._id.toString()) {
-            res.status(403).json({ message: 'Not authorized to cancel this booking' });
-            return;
-        }
-        booking.status = 'cancelled';
-        yield booking.save();
-        res.json(booking);
-    }
-    catch (error) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
-exports.cancelBooking = cancelBooking;
 const approveBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const booking = yield booking_model_1.default.findById(req.params.id);
         if (!booking) {
             res.status(404).json({ message: 'Booking not found' });
-            return;
-        }
-        // Allow changing from any status to approved
-        if (booking.status === 'cancelled') {
-            res.status(400).json({ message: 'Cannot approve a cancelled booking' });
             return;
         }
         // Check for conflicts
@@ -193,11 +167,6 @@ const rejectBooking = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const booking = yield booking_model_1.default.findById(req.params.id);
         if (!booking) {
             res.status(404).json({ message: 'Booking not found' });
-            return;
-        }
-        // Allow changing from any status to rejected except cancelled
-        if (booking.status === 'cancelled') {
-            res.status(400).json({ message: 'Cannot reject a cancelled booking' });
             return;
         }
         booking.status = 'rejected';

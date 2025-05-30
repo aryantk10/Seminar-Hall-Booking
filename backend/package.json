@@ -7,8 +7,9 @@
     "start": "node dist/app.js",
     "dev": "nodemon src/app.ts",
     "build": "tsc",
-    "lint": "eslint src/**/*.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint . --ext .ts",
+    "test": "jest --coverage",
+    "ci": "npm run lint && npm run test && npm run build"
   },
   "keywords": [],
   "author": "",
