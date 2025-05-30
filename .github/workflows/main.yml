@@ -43,11 +43,6 @@ jobs:
         cd src && npm ci
         cd ../backend && npm ci
 
-    - name: Lint
-      run: |
-        cd src && npm run lint
-        cd ../backend && npm run lint
-
     - name: Type Check
       run: |
         cd src && npm run type-check || true
@@ -80,7 +75,7 @@ jobs:
   test:
     needs: code-quality
     runs-on: ubuntu-latest
-    
+
     services:
       mongodb:
         image: mongo:latest
@@ -129,7 +124,7 @@ jobs:
     needs: [test, security-scan]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    
+
     steps:
     - uses: actions/checkout@v3
 

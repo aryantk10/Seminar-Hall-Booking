@@ -7,7 +7,7 @@ import { halls as defaultHallsData, allPossibleAmenities } from "@/lib/data";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { Search, Filter, ListFilter } from "lucide-react";
+import { Search, ListFilter } from "lucide-react";
 import type { Hall } from "@/lib/types";
 
 const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";

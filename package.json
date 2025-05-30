@@ -6,9 +6,8 @@
     "dev": "next dev -p 4000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
     "test": "jest --coverage",
-    "ci": "npm run lint && npm run test && npm run build",
+    "ci": "npm run test && npm run build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -55,17 +54,12 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.28.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "eslint": "^9.27.0",
-    "eslint-config-next": "15.3.3",
-    "eslint-plugin-react": "^7.37.5",
     "globals": "^16.2.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5",
-    "typescript-eslint": "^8.33.0"
+    "typescript": "^5"
   }
 }

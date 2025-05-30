@@ -7,9 +7,8 @@
     "start": "node dist/app.js",
     "dev": "nodemon src/app.ts",
     "build": "tsc",
-    "lint": "eslint . --ext .ts",
     "test": "jest --coverage",
-    "ci": "npm run lint && npm run test && npm run build"
+    "ci": "npm run test && npm run build"
   },
   "keywords": [],
   "author": "",

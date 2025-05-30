@@ -1,8 +1,6 @@
-
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -22,7 +20,7 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
-        ...(config.resolve.fallback || {}), // Spread existing fallbacks if any
+        ...(config.resolve.fallback || {}),
         async_hooks: false,
         fs: false,
         tls: false,
