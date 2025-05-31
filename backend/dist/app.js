@@ -17,6 +17,7 @@ const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const dotenv_1 = __importDefault(require("dotenv"));
+require("./services/cron.service");
 // Routes
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const hall_routes_1 = __importDefault(require("./routes/hall.routes"));

@@ -9,13 +9,11 @@ import AdminBookingControls from "@/components/admin/AdminBookingControls";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Clock, XCircle, HelpCircle, Trash2, Bell } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 
 export default function AdminRequestsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<string[]>([]);

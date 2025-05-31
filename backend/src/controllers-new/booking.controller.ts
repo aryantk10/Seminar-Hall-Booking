@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Booking, { IBooking } from '../models/booking.model';
+import Booking from '../models/booking.model';
 import Hall from '../models/hall.model';
 
 interface AuthRequest extends Request {
@@ -161,7 +161,7 @@ export const approveBooking = async (req: AuthRequest, res: Response): Promise<v
       booking.hall.toString(),
       booking.startTime,
       booking.endTime,
-      booking._id
+      booking._id.toString()
     );
     if (conflict) {
       res.status(400).json({ message: 'Hall is already booked for this time slot' });
@@ -192,4 +192,4 @@ export const rejectBooking = async (req: AuthRequest, res: Response): Promise<vo
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
-}; 
+};
