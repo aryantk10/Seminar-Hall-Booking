@@ -2,7 +2,7 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User as UserIcon, Mail, ShieldCheck, Building, UploadCloud, Trash2, Edit3, Save, XCircleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";

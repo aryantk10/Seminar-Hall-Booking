@@ -68,23 +68,40 @@ export const auth = {
 };
 
 // Halls API
+interface HallData {
+  name: string;
+  capacity: number;
+  location: string;
+  amenities?: string[];
+  description?: string;
+}
+
 export const halls = {
   getAll: () => api.get('/halls'),
   getById: (id: string) => api.get(`/halls/${id}`),
-  create: (data: any) => api.post('/halls', data),
-  update: (id: string, data: any) => api.put(`/halls/${id}`, data),
+  create: (data: HallData) => api.post('/halls', data),
+  update: (id: string, data: Partial<HallData>) => api.put(`/halls/${id}`, data),
   delete: (id: string) => api.delete(`/halls/${id}`),
   checkAvailability: (id: string, startDate: string, endDate: string) =>
     api.get(`/halls/${id}/availability`, { params: { startDate, endDate } }),
 };
 
 // Bookings API
+interface BookingData {
+  hallId: string;
+  startDate: string;
+  endDate: string;
+  purpose: string;
+  attendees?: number;
+  requirements?: string;
+}
+
 export const bookings = {
-  create: (data: any) => api.post('/bookings', data),
+  create: (data: BookingData) => api.post('/bookings', data),
   getAll: () => api.get('/bookings'),
   getById: (id: string) => api.get(`/bookings/${id}`),
   getMyBookings: () => api.get('/bookings/my-bookings'),
-  update: (id: string, data: any) => api.put(`/bookings/${id}`, data),
+  update: (id: string, data: Partial<BookingData>) => api.put(`/bookings/${id}`, data),
   delete: (id: string) => api.delete(`/bookings/${id}`),
   approve: (id: string) => api.put(`/bookings/${id}/approve`),
   reject: (id: string) => api.put(`/bookings/${id}/reject`),

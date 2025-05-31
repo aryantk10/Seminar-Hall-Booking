@@ -2,8 +2,15 @@
 
 import { useState } from 'react'
 
+interface TestResult {
+  status: number | string;
+  data: unknown;
+  success: boolean;
+  apiUrl?: string;
+}
+
 export default function TestAPIPage() {
-  const [results, setResults] = useState<any>({})
+  const [results, setResults] = useState<Record<string, TestResult>>({})
   const [loading, setLoading] = useState(false)
 
   const testEndpoint = async (name: string, url: string) => {
@@ -130,7 +137,7 @@ export default function TestAPIPage() {
       </div>
 
       <div className="space-y-4">
-        {Object.entries(results).map(([name, result]: [string, any]) => (
+        {Object.entries(results).map(([name, result]: [string, TestResult]) => (
           <div key={name} className="border p-4 rounded">
             <h3 className="font-semibold text-lg mb-2">{name}</h3>
             <div className={`p-2 rounded ${result.success ? 'bg-green-100' : 'bg-red-100'}`}>
