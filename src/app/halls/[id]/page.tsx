@@ -113,8 +113,9 @@ const getHallDetails = (id: string): Hall => {
   return halls[id] || halls['apex-auditorium']
 }
 
-export default function HallDetailsPage({ params }: { params: { id: string } }) {
-  const hall = getHallDetails(params.id)
+export default async function HallDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const hall = getHallDetails(id)
 
   return (
     <div className="min-h-screen bg-gray-50">
