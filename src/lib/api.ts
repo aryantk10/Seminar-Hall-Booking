@@ -1,6 +1,24 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+// Production-first API URL configuration
+const getApiUrl = () => {
+  // If we're in production and on the deployed domain, use the backend URL
+  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    return 'https://seminar-hall-booking-backend.onrender.com/api';
+  }
+
+  // Use environment variable if available
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // Fallback to localhost for development
+  return 'http://localhost:5000/api';
+};
+
+const API_URL = getApiUrl();
+
+console.log('🔗 API URL configured:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,

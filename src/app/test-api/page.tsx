@@ -79,8 +79,11 @@ export default function TestAPIPage() {
         <h2 className="text-xl font-semibold mb-4">Environment Info</h2>
         <div className="bg-gray-100 p-4 rounded">
           <p><strong>NEXT_PUBLIC_API_URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'Not set'}</p>
+          <p><strong>NODE_ENV:</strong> {process.env.NODE_ENV || 'Not set'}</p>
           <p><strong>Fallback URL:</strong> http://localhost:5000/api</p>
           <p><strong>Current API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}</p>
+          <p><strong>Window Location:</strong> {typeof window !== 'undefined' ? window.location.href : 'Server-side'}</p>
+          <p><strong>Is Production:</strong> {process.env.NODE_ENV === 'production' ? 'Yes' : 'No'}</p>
         </div>
       </div>
 
@@ -114,7 +117,15 @@ export default function TestAPIPage() {
           className="bg-red-500 text-white p-3 rounded hover:bg-red-600"
           disabled={loading}
         >
-          Test Login Request
+          Test Login Request (Env URL)
+        </button>
+
+        <button
+          onClick={() => testEndpoint('direct-login', 'https://seminar-hall-booking-backend.onrender.com/api/auth/login')}
+          className="bg-orange-500 text-white p-3 rounded hover:bg-orange-600"
+          disabled={loading}
+        >
+          Test Direct Backend URL
         </button>
       </div>
 

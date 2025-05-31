@@ -17,6 +17,9 @@ export default function LoginPage() {
 
     try {
       console.log('Attempting login with:', { email, password: '***' })
+      console.log('API URL being used:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api')
+      console.log('Environment:', process.env.NODE_ENV)
+
       const response = await auth.login({ email, password })
       console.log('Login response:', response)
 
