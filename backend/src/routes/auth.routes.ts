@@ -4,18 +4,7 @@ import { register, login, getProfile, updateProfile } from '../controllers/auth.
 
 const router = express.Router();
 
-// Test endpoint for debugging
-router.get('/', (req, res) => {
-  res.json({
-    message: 'Auth routes are working',
-    endpoints: [
-      'POST /api/auth/register',
-      'POST /api/auth/login',
-      'GET /api/auth/profile',
-      'PUT /api/auth/profile'
-    ]
-  });
-});
+// Auth routes - removed test endpoint to prevent conflicts
 
 router.post('/register', register);
 router.post('/login', login);

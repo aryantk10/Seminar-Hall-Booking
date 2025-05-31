@@ -63,28 +63,7 @@ app.get('/api', (req: Request, res: Response) => {
   });
 });
 
-// Simple auth test route
-app.get('/api/auth', (req: Request, res: Response) => {
-  res.json({
-    message: 'Auth API is working',
-    endpoints: [
-      'POST /api/auth/register',
-      'POST /api/auth/login',
-      'GET /api/auth/profile',
-      'PUT /api/auth/profile'
-    ],
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Simple login test route
-app.post('/api/auth/test-login', (req: Request, res: Response) => {
-  res.json({
-    message: 'Login endpoint is accessible',
-    body: req.body,
-    timestamp: new Date().toISOString()
-  });
-});
+// Removed conflicting test routes that were blocking real auth routes
 
 // API Routes
 console.log('Registering auth routes...');

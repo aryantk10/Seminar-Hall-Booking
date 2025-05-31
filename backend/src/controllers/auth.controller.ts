@@ -46,7 +46,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
-    console.log('Login attempt:', { email, password: '***' });
+    console.log('🔐 Login attempt:', { email, password: '***', timestamp: new Date().toISOString() });
 
     const user = await User.findOne({ email });
     console.log('User found:', user ? 'Yes' : 'No');
@@ -75,7 +75,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       token: generateToken(user._id),
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
   }
 };
 
