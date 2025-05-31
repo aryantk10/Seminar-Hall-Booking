@@ -4,8 +4,8 @@
   "description": "Backend for Seminar Hall Booking System",
   "main": "dist/app.js",
   "scripts": {
-    "start": "node start.js",
-    "start:prod": "node dist/app.js",
+    "start": "node dist/app.js",
+    "start:dev": "node start.js",
     "dev": "nodemon src/app.ts",
     "build": "tsc",
     "type-check": "tsc --noEmit",

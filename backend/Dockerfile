@@ -60,6 +60,7 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy built application
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/start.js ./start.js
 
 # Change ownership to non-root user
 RUN chown -R backend:nodejs /app
