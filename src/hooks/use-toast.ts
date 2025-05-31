@@ -37,19 +37,19 @@ type ActionType = typeof actionTypes
 
 type Action =
   | {
-      type: ActionType["ADD_TOAST"]
+      type: "ADD_TOAST"
       toast: ToasterToast
     }
   | {
-      type: ActionType["UPDATE_TOAST"]
+      type: "UPDATE_TOAST"
       toast: Partial<ToasterToast> & { id: string }
     }
   | {
-      type: ActionType["DISMISS_TOAST"]
+      type: "DISMISS_TOAST"
       toastId?: string
     }
   | {
-      type: ActionType["REMOVE_TOAST"]
+      type: "REMOVE_TOAST"
       toastId?: string
     }
 
@@ -77,22 +77,27 @@ const addToRemoveQueue = (toastId: string) => {
 
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
-    case "ADD_TOAST":
+    case "ADD_TOAST": {
+      const addAction = action as Extract<Action, { type: "ADD_TOAST" }>
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: [addAction.toast, ...state.toasts].slice(0, TOAST_LIMIT),
       }
+    }
 
-    case "UPDATE_TOAST":
+    case "UPDATE_TOAST": {
+      const updateAction = action as Extract<Action, { type: "UPDATE_TOAST" }>
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
+          t.id === updateAction.toast.id ? { ...t, ...updateAction.toast } : t
         ),
       }
+    }
 
     case "DISMISS_TOAST": {
-      const { toastId } = action
+      const dismissAction = action as Extract<Action, { type: "DISMISS_TOAST" }>
+      const { toastId } = dismissAction
 
       // ! Side effects ! - This could be extracted into a dismissToast() action,
       // but I'll keep it here for simplicity
@@ -116,8 +121,9 @@ export const reducer = (state: State, action: Action): State => {
         ),
       }
     }
-    case "REMOVE_TOAST":
-      if (action.toastId === undefined) {
+    case "REMOVE_TOAST": {
+      const removeAction = action as Extract<Action, { type: "REMOVE_TOAST" }>
+      if (removeAction.toastId === undefined) {
         return {
           ...state,
           toasts: [],
@@ -125,8 +131,9 @@ export const reducer = (state: State, action: Action): State => {
       }
       return {
         ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+        toasts: state.toasts.filter((t) => t.id !== removeAction.toastId),
       }
+    }
     default:
       return state
   }
