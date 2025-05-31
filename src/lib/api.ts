@@ -1,24 +1,25 @@
 import axios from 'axios';
 
-// Production-first API URL configuration
-const getApiUrl = () => {
-  // If we're in production and on the deployed domain, use the backend URL
+// EMERGENCY FIX: Force production URL when deployed
+const getApiUrl = (): string => {
+  // If we're on the deployed domain, force production URL
   if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+    console.log('🔗 DEPLOYED: Using production backend URL');
     return 'https://seminar-hall-booking-backend.onrender.com/api';
   }
 
   // Use environment variable if available
-  if (process.env.NEXT_PUBLIC_API_URL) {
+  if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL !== 'http://localhost:5000') {
+    console.log('🔗 Using environment variable API URL:', process.env.NEXT_PUBLIC_API_URL);
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
-  // Fallback to localhost for development
+  // Development fallback
+  console.log('🔗 Using development API URL');
   return 'http://localhost:5000/api';
 };
 
 const API_URL = getApiUrl();
-
-console.log('🔗 API URL configured:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,

@@ -29,13 +29,18 @@ export default function LoginPage() {
       if (userData?.token) {
         // Store token in localStorage
         localStorage.setItem('token', userData.token)
-        localStorage.setItem('user', JSON.stringify({
-          _id: userData._id,
+
+        // Store user data in consistent format for AuthContext
+        const userForContext = {
+          id: userData._id,
           name: userData.name,
           email: userData.email,
           role: userData.role,
           department: userData.department
-        }))
+        };
+
+        localStorage.setItem('hallHubUser', JSON.stringify(userForContext))
+        localStorage.setItem('user', JSON.stringify(userData)) // Keep for backward compatibility
 
         alert('Login successful! Redirecting to dashboard...')
         window.location.href = '/dashboard'
