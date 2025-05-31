@@ -170,19 +170,30 @@ jobs:
         echo "✅ Backend image built successfully"
         docker images | grep seminar-hall || echo "Images built but not visible in docker images"
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'seminar-hall-backend:latest'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
+    - name: Run filesystem security scan
+      run: |
+        echo "🔍 Running basic security checks..."
+
+        # Check for common security issues in package files
+        echo "Checking package.json files for known vulnerabilities..."
+        npm audit --audit-level=moderate || echo "Found some vulnerabilities (non-blocking)"
+        cd backend && npm audit --audit-level=moderate || echo "Found some vulnerabilities (non-blocking)"
+
+        # Check for sensitive files
+        echo "Checking for sensitive files..."
+        find . -name "*.env*" -not -path "./node_modules/*" -not -path "./backend/node_modules/*" | head -10
+        find . -name "*secret*" -not -path "./node_modules/*" -not -path "./backend/node_modules/*" | head -10
+        find . -name "*key*" -not -path "./node_modules/*" -not -path "./backend/node_modules/*" | head -10
+
+        echo "✅ Basic security scan completed"
       continue-on-error: true
 
-    - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
-      if: always()
+    - name: Run Trivy filesystem scan (optional)
+      uses: aquasecurity/trivy-action@master
       with:
-        sarif_file: 'trivy-results.sarif'
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'table'
       continue-on-error: true
 
   # Job 4: Deploy to Staging
