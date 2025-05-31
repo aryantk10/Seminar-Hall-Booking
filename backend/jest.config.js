@@ -5,14 +5,11 @@
 
 /** @type {import('jest').Config} */
 const config = {
-  // All imported modules in your tests should be mocked automatically
-  // automock: false,
+  // TypeScript preset for Jest
+  preset: 'ts-jest',
 
-  // Stop running tests after `n` failures
-  // bail: 0,
-
-  // The directory where Jest should store its cached dependency information
-  // cacheDirectory: "C:\\Users\\aryan\\AppData\\Local\\Temp\\jest",
+  // Test environment
+  testEnvironment: 'node',
 
   // Automatically clear mock calls, instances, contexts and results before every test
   clearMocks: true,
@@ -21,15 +18,30 @@ const config = {
   collectCoverage: true,
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  // collectCoverageFrom: undefined,
+  collectCoverageFrom: [
+    'src/**/*.{ts,js}',
+    '!src/**/*.d.ts',
+    '!src/app.ts', // Exclude main app file
+    '!src/**/__tests__/**', // Exclude test files
+  ],
+
+  // Coverage thresholds (more lenient for now)
+  coverageThreshold: {
+    global: {
+      branches: 20,
+      functions: 20,
+      lines: 20,
+      statements: 20,
+    },
+  },
 
   // The directory where Jest should output its coverage files
   coverageDirectory: "coverage",
 
   // An array of regexp pattern strings used to skip coverage collection
-  // coveragePathIgnorePatterns: [
-  //   "\\\\node_modules\\\\"
-  // ],
+  coveragePathIgnorePatterns: [
+    "/node_modules/"
+  ],
 
   // Indicates which provider should be used to instrument code for coverage
   coverageProvider: "v8",
@@ -144,25 +156,25 @@ const config = {
   // A list of paths to snapshot serializer modules Jest should use for snapshot testing
   // snapshotSerializers: [],
 
-  // The test environment that will be used for testing
-  // testEnvironment: "jest-environment-node",
-
-  // Options that will be passed to the testEnvironment
-  // testEnvironmentOptions: {},
-
-  // Adds a location field to test results
-  // testLocationInResults: false,
-
   // The glob patterns Jest uses to detect test files
-  // testMatch: [
-  //   "**/__tests__/**/*.[jt]s?(x)",
-  //   "**/?(*.)+(spec|test).[tj]s?(x)"
-  // ],
+  testMatch: [
+    "**/__tests__/**/*.[jt]s?(x)",
+    "**/?(*.)+(spec|test).[tj]s?(x)"
+  ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  // testPathIgnorePatterns: [
-  //   "\\\\node_modules\\\\"
-  // ],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/dist/"
+  ],
+
+  // Transform TypeScript files
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+  },
+
+  // Module file extensions
+  moduleFileExtensions: ['ts', 'js', 'json'],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
   // testRegex: [],
