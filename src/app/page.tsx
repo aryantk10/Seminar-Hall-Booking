@@ -7,35 +7,35 @@ import Image from 'next/image';
 import Header from '@/components/shared/Header';
 import { useState, useEffect } from 'react';
 
-// Seminar hall images - using actual hall names from your application
+// Official Institute Auditoriums and Board Rooms
 const hallImages = [
   {
     id: 1,
-    url: '/images/halls/esb-seminar-hall-1.jpg',
-    fallbackUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=500&fit=crop&crop=center',
-    title: 'ESB Seminar Hall - I',
-    description: 'Engineering Sciences Block - Modern seminar hall with projector and Wi-Fi (Capacity: 100)'
+    url: '/images/halls/apex-auditorium.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop&crop=center',
+    title: 'Apex Block Auditorium',
+    description: 'State-of-the-art auditorium for graduation ceremonies, events, and major functions (Capacity: 1000)'
   },
   {
     id: 2,
-    url: '/images/halls/esb-seminar-hall-2.jpg',
-    fallbackUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=500&fit=crop&crop=center',
-    title: 'ESB Seminar Hall - II',
-    description: 'Engineering Sciences Block - Advanced seminar space with sound system and microphone (Capacity: 120)'
+    url: '/images/halls/esb-seminar-hall-1.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=500&fit=crop&crop=center',
+    title: 'ESB Seminar Hall 1',
+    description: 'Engineering Sciences Block - Large seminar hall for department events and presentations (Capacity: 315)'
   },
   {
     id: 3,
-    url: '/images/halls/lhc-seminar-hall.jpg',
-    fallbackUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop&crop=center',
-    title: 'LHC Seminar Hall - II',
-    description: 'Lecture Hall Complex - Large presentation hall with interactive whiteboard (Capacity: 180)'
+    url: '/images/halls/des-hitech-seminar-hall.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=500&fit=crop&crop=center',
+    title: 'DES Hi-Tech Seminar Hall',
+    description: 'Department of Engineering Sciences - Modern hi-tech seminar facility (Capacity: 200)'
   },
   {
     id: 4,
-    url: '/images/halls/apex-auditorium.jpg',
+    url: '/images/halls/apex-board-room.jpg',
     fallbackUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=500&fit=crop&crop=center',
-    title: 'APEX Auditorium',
-    description: 'APEX Block - Large venue with LED screen and professional sound system (Capacity: 500)'
+    title: 'Apex Board Room',
+    description: 'Executive board room for governing body meetings and academic council sessions (Capacity: 60)'
   }
 ]
 

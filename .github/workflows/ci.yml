@@ -584,7 +584,9 @@ jobs:
         merge-multiple: true
 
     - name: Deploy to Render (Staging)
-      if: ${{ secrets.RENDER_API_KEY != '' }}
+      if: ${{ env.RENDER_API_KEY != '' }}
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       run: |
         echo "🚀 Deploying to Render staging..."
 
@@ -601,7 +603,9 @@ jobs:
       continue-on-error: true
 
     - name: Simulate deployment (if Render not configured)
-      if: ${{ secrets.RENDER_API_KEY == '' }}
+      if: ${{ env.RENDER_API_KEY == '' }}
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
       run: |
         echo "🔄 Render not configured - simulating deployment..."
         echo "Would deploy to: https://seminar-hall-booking.onrender.com"
