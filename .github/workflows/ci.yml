@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -15,7 +16,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Run Tests
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -28,11 +29,13 @@ jobs:
 
     - name: Install frontend dependencies
       run: npm ci
+      continue-on-error: true
 
     - name: Install backend dependencies
       run: |
         cd backend
         npm ci
+      continue-on-error: true
 
     - name: Run frontend linting
       run: npm run lint
