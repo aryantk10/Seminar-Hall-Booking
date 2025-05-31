@@ -23,6 +23,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 60000, // 60 seconds timeout for backend wake-up
 });
 
 // Request interceptor for adding auth token
@@ -35,6 +36,19 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      error.message = 'Backend service is starting up. Please wait a moment and try again.';
+    } else if (error.code === 'ERR_NETWORK') {
+      error.message = 'Unable to connect to server. The service may be starting up.';
+    }
     return Promise.reject(error);
   }
 );

@@ -20,7 +20,8 @@ const allowedOrigins = [
   'http://localhost:4000',
   'http://localhost:9002',
   'https://seminar-hall-booking.onrender.com',
-  'https://seminar-hall-booking-j69q.onrender.com'
+  'https://seminar-hall-booking-j69q.onrender.com',
+  'https://seminar-hall-booking-psi.vercel.app'
 ];
 
 if (process.env.CORS_ORIGIN) {
