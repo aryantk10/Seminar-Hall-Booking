@@ -109,3 +109,5 @@ PORT=9002
 
 - Remove volumes: `docker-compose down -v`
 - Clean up unused images: `docker system prune`
+
+Anything else will be added soon
