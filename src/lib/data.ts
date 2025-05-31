@@ -1,19 +1,21 @@
 import type { Hall } from '@/lib/types';
 
 export const halls: Hall[] = [
-  // Auditoriums - Official Institute Facilities
-  { id: 'apex-auditorium', name: 'Apex Block Auditorium', block: 'APEX Block', capacity: 1000, image: '/images/halls/apex-auditorium.jpg', dataAiHint: 'large auditorium', amenities: ['Large LED Screen', 'Professional Sound System', 'Stage Lighting', 'Green Room', 'Wi-Fi', 'Air Conditioning', 'Parking'] },
-  { id: 'esb-hall-1', name: 'ESB Seminar Hall 1', block: 'Engineering Sciences Block (ESB)', capacity: 315, image: '/images/halls/esb-seminar-hall-1.jpg', dataAiHint: 'seminar hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Podium'] },
-  { id: 'esb-hall-2', name: 'ESB Seminar Hall 2', block: 'Engineering Sciences Block (ESB)', capacity: 140, image: '/images/halls/esb-seminar-hall-2.jpg', dataAiHint: 'seminar hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
-  { id: 'des-hitech', name: 'DES Hi-Tech Seminar Hall', block: 'Department of Engineering Sciences (DES)', capacity: 200, image: '/images/halls/des-hitech-seminar-hall.jpg', dataAiHint: 'hi-tech seminar hall', amenities: ['Advanced Projector', 'Interactive Whiteboard', 'Sound System', 'Wi-Fi', 'Video Conferencing'] },
-  { id: 'lhc-hall-1', name: 'LHC Seminar Hall 1', block: 'Lecture Hall Complex (LHC)', capacity: 115, image: '/images/halls/lhc-seminar-hall-1.jpg', dataAiHint: 'lecture hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
-  { id: 'lhc-hall-2', name: 'LHC Seminar Hall 2', block: 'Lecture Hall Complex (LHC)', capacity: 115, image: '/images/halls/lhc-seminar-hall-2.jpg', dataAiHint: 'lecture hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
+  // Auditorium
+  { id: 'apex-auditorium', name: 'APEX Auditorium', block: 'APEX Block', capacity: 1000, image: '/images/halls/apex-auditorium.jpg', dataAiHint: 'large auditorium', amenities: ['Large LED Screen', 'Professional Sound System', 'Stage Lighting', 'Green Room', 'Wi-Fi', 'Air Conditioning', 'Parking'] },
 
-  // Board Rooms - Official Institute Facilities
-  { id: 'apex-board', name: 'Apex Board Room', block: 'APEX Block', capacity: 60, image: '/images/halls/apex-board-room.jpg', dataAiHint: 'board room', amenities: ['Conference Table', 'Video Conferencing', 'Projector', 'Wi-Fi', 'Air Conditioning'] },
-  { id: 'esb-board', name: 'ESB Board Room', block: 'Engineering Sciences Block (ESB)', capacity: 60, image: '/images/halls/esb-board-room.jpg', dataAiHint: 'board room', amenities: ['Conference Table', 'Video Conferencing', 'Projector', 'Wi-Fi'] },
-  { id: 'des-board-1', name: 'DES Board Room 1', block: 'Department of Engineering Sciences (DES)', capacity: 50, image: '/images/halls/des-board-room-1.jpg', dataAiHint: 'board room', amenities: ['Conference Table', 'Projector', 'Wi-Fi', 'Air Conditioning'] },
-  { id: 'des-board-2', name: 'DES Board Room 2', block: 'Department of Engineering Sciences (DES)', capacity: 45, image: '/images/halls/des-board-room-2.jpg', dataAiHint: 'board room', amenities: ['Conference Table', 'Projector', 'Wi-Fi'] },
+  // ESB Seminar Halls
+  { id: 'esb-hall-1', name: 'ESB Seminar Hall - I', block: 'Engineering Sciences Block (ESB)', capacity: 315, image: '/images/halls/esb-seminar-hall-1.jpg', dataAiHint: 'seminar hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Podium'] },
+  { id: 'esb-hall-2', name: 'ESB Seminar Hall - II', block: 'Engineering Sciences Block (ESB)', capacity: 140, image: '/images/halls/esb-seminar-hall-2.jpg', dataAiHint: 'seminar hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
+  { id: 'esb-hall-3', name: 'ESB Seminar Hall - III', block: 'Engineering Sciences Block (ESB)', capacity: 200, image: '/images/halls/esb-seminar-hall-3.jpg', dataAiHint: 'seminar hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
+
+  // DES Seminar Halls
+  { id: 'des-hall-1', name: 'DES Seminar Hall - I', block: 'Department of Engineering Sciences (DES)', capacity: 200, image: '/images/halls/des-seminar-hall-1.jpg', dataAiHint: 'seminar hall', amenities: ['Advanced Projector', 'Interactive Whiteboard', 'Sound System', 'Wi-Fi', 'Video Conferencing'] },
+  { id: 'des-hall-2', name: 'DES Seminar Hall - II', block: 'Department of Engineering Sciences (DES)', capacity: 150, image: '/images/halls/des-seminar-hall-2.jpg', dataAiHint: 'seminar hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
+
+  // LHC Seminar Halls
+  { id: 'lhc-hall-1', name: 'LHC Seminar Hall - I', block: 'Lecture Hall Complex (LHC)', capacity: 115, image: '/images/halls/lhc-seminar-hall-1.jpg', dataAiHint: 'lecture hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
+  { id: 'lhc-hall-2', name: 'LHC Seminar Hall - II', block: 'Lecture Hall Complex (LHC)', capacity: 115, image: '/images/halls/lhc-seminar-hall-2.jpg', dataAiHint: 'lecture hall', amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'] },
 ];
 
 export const timeSlots = [

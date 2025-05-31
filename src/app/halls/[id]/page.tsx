@@ -1,44 +1,103 @@
 import Link from 'next/link'
 
-// Mock hall details for Cypress testing
+// Official Institute Hall Details
 const getHallDetails = (id: string) => {
   const halls: Record<string, any> = {
-    'hall-1': {
-      id: 'hall-1',
-      name: 'Conference Room A',
-      capacity: 50,
-      location: 'Building 1, Floor 2',
-      description: 'A modern conference room perfect for meetings, presentations, and small seminars. Equipped with the latest technology and comfortable seating.',
-      amenities: ['Projector', 'Whiteboard', 'AC', 'WiFi', 'Video Conferencing'],
-      images: ['https://placehold.co/600x400/e2e8f0/64748b?text=Conference+Room+A'],
+    // Auditorium
+    'apex-auditorium': {
+      id: 'apex-auditorium',
+      name: 'APEX Auditorium',
+      capacity: 1000,
+      location: 'APEX Block',
+      description: 'State-of-the-art auditorium used for graduation ceremonies, first year inauguration, fresher\'s party, felicitation functions, alumni events, and major department level events.',
+      amenities: ['Large LED Screen', 'Professional Sound System', 'Stage Lighting', 'Green Room', 'Wi-Fi', 'Air Conditioning', 'Parking'],
+      images: ['/images/halls/apex-auditorium.jpg'],
       isAvailable: true,
-      pricePerHour: 500
+      pricePerHour: 2000
     },
-    'hall-2': {
-      id: 'hall-2',
-      name: 'Seminar Hall B', 
-      capacity: 100,
-      location: 'Building 2, Floor 1',
-      description: 'Spacious seminar hall ideal for workshops, training sessions, and medium-sized events. Features excellent acoustics and lighting.',
-      amenities: ['Projector', 'Sound System', 'AC', 'WiFi', 'Stage'],
-      images: ['https://placehold.co/600x400/ddd6fe/7c3aed?text=Seminar+Hall+B'],
+    // ESB Seminar Halls
+    'esb-hall-1': {
+      id: 'esb-hall-1',
+      name: 'ESB Seminar Hall - I',
+      capacity: 315,
+      location: 'Engineering Sciences Block (ESB)',
+      description: 'Large seminar hall in the Engineering Sciences Block, perfect for department events, presentations, and academic sessions.',
+      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Podium'],
+      images: ['/images/halls/esb-seminar-hall-1.jpg'],
+      isAvailable: true,
+      pricePerHour: 1200
+    },
+    'esb-hall-2': {
+      id: 'esb-hall-2',
+      name: 'ESB Seminar Hall - II',
+      capacity: 140,
+      location: 'Engineering Sciences Block (ESB)',
+      description: 'Medium-sized seminar hall ideal for focused academic sessions, workshops, and department meetings.',
+      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
+      images: ['/images/halls/esb-seminar-hall-2.jpg'],
       isAvailable: true,
       pricePerHour: 800
     },
-    'hall-3': {
-      id: 'hall-3',
-      name: 'Auditorium C',
+    'esb-hall-3': {
+      id: 'esb-hall-3',
+      name: 'ESB Seminar Hall - III',
       capacity: 200,
-      location: 'Main Building, Ground Floor',
-      description: 'Large auditorium perfect for conferences, lectures, and major events. Professional-grade audio-visual equipment included.',
-      amenities: ['Stage', 'Sound System', 'Lighting', 'AC', 'WiFi', 'Recording Equipment'],
-      images: ['https://placehold.co/600x400/fecaca/dc2626?text=Auditorium+C'],
-      isAvailable: false,
-      pricePerHour: 1200
+      location: 'Engineering Sciences Block (ESB)',
+      description: 'Versatile seminar hall perfect for workshops, academic events, and department presentations.',
+      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
+      images: ['/images/halls/esb-seminar-hall-3.jpg'],
+      isAvailable: true,
+      pricePerHour: 1000
+    },
+    // DES Seminar Halls
+    'des-hall-1': {
+      id: 'des-hall-1',
+      name: 'DES Seminar Hall - I',
+      capacity: 200,
+      location: 'Department of Engineering Sciences (DES)',
+      description: 'Modern seminar facility with advanced audio-visual systems, perfect for technology-enhanced learning and presentations.',
+      amenities: ['Advanced Projector', 'Interactive Whiteboard', 'Sound System', 'Wi-Fi', 'Video Conferencing'],
+      images: ['/images/halls/des-seminar-hall-1.jpg'],
+      isAvailable: true,
+      pricePerHour: 1000
+    },
+    'des-hall-2': {
+      id: 'des-hall-2',
+      name: 'DES Seminar Hall - II',
+      capacity: 150,
+      location: 'Department of Engineering Sciences (DES)',
+      description: 'Collaborative learning environment perfect for seminars, workshops, and interactive academic sessions.',
+      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
+      images: ['/images/halls/des-seminar-hall-2.jpg'],
+      isAvailable: true,
+      pricePerHour: 800
+    },
+    // LHC Seminar Halls
+    'lhc-hall-1': {
+      id: 'lhc-hall-1',
+      name: 'LHC Seminar Hall - I',
+      capacity: 115,
+      location: 'Lecture Hall Complex (LHC)',
+      description: 'Intimate learning space in the Lecture Hall Complex, ideal for focused discussions and smaller academic events.',
+      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
+      images: ['/images/halls/lhc-seminar-hall-1.jpg'],
+      isAvailable: true,
+      pricePerHour: 600
+    },
+    'lhc-hall-2': {
+      id: 'lhc-hall-2',
+      name: 'LHC Seminar Hall - II',
+      capacity: 115,
+      location: 'Lecture Hall Complex (LHC)',
+      description: 'Interactive learning environment perfect for seminars, workshops, and collaborative academic sessions.',
+      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
+      images: ['/images/halls/lhc-seminar-hall-2.jpg'],
+      isAvailable: true,
+      pricePerHour: 600
     }
   }
-  
-  return halls[id] || halls['hall-1']
+
+  return halls[id] || halls['apex-auditorium']
 }
 
 export default function HallDetailsPage({ params }: { params: { id: string } }) {

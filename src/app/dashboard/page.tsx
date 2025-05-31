@@ -70,17 +70,21 @@ export default function DashboardPage() {
             <CardDescription>Check out one of our premier seminar halls.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col md:flex-row gap-6 items-center">
-            <Image 
-              src="https://placehold.co/300x200.png" 
-              alt="Featured Hall" 
-              data-ai-hint="modern lecture"
-              width={300} 
-              height={200} 
+            <Image
+              src="/images/halls/apex-auditorium.jpg"
+              alt="APEX Auditorium"
+              data-ai-hint="large auditorium"
+              width={300}
+              height={200}
               className="rounded-lg object-cover shadow-md"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=300&h=200&fit=crop&crop=center";
+              }}
             />
             <div>
               <h3 className="text-xl font-semibold">APEX Auditorium</h3>
-              <p className="text-muted-foreground mt-1 mb-3">Located in the APEX Block, this auditorium is perfect for large conferences and events, seating up to 500 guests.</p>
+              <p className="text-muted-foreground mt-1 mb-3">Located in the APEX Block, this state-of-the-art auditorium is perfect for graduation ceremonies, major events, and institutional functions with a capacity of 1000.</p>
               <Button asChild>
                 <Link href="/dashboard/book/apex">Book APEX Auditorium</Link>
               </Button>

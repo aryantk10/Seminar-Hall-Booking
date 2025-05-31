@@ -2,43 +2,52 @@
 
 import Link from 'next/link'
 
-// Mock bookings data for Cypress testing
+// Mock bookings data with official institute halls
 const mockBookings = [
   {
     id: 'booking-1',
-    hallName: 'Conference Room A',
+    hallName: 'APEX Auditorium',
     date: '2024-01-20',
-    timeSlot: '09:00-10:00',
-    purpose: 'Team Meeting',
+    timeSlot: '09:00-11:00',
+    purpose: 'Graduation Ceremony',
     status: 'approved',
     createdAt: '2024-01-15'
   },
   {
     id: 'booking-2',
-    hallName: 'Seminar Hall B', 
+    hallName: 'ESB Seminar Hall - I',
     date: '2024-01-22',
     timeSlot: '14:00-16:00',
-    purpose: 'Workshop on AI',
+    purpose: 'Department Workshop',
     status: 'pending',
     createdAt: '2024-01-16'
   },
   {
     id: 'booking-3',
-    hallName: 'Auditorium C',
+    hallName: 'DES Seminar Hall - I',
     date: '2024-01-25',
     timeSlot: '10:00-12:00',
     purpose: 'Research Presentation',
-    status: 'cancelled',
+    status: 'approved',
     createdAt: '2024-01-17'
   },
   {
     id: 'booking-4',
-    hallName: 'Conference Room A',
+    hallName: 'ESB Seminar Hall - II',
     date: '2024-01-28',
     timeSlot: '15:00-17:00',
-    purpose: 'Client Meeting',
+    purpose: 'Academic Seminar',
     status: 'approved',
     createdAt: '2024-01-18'
+  },
+  {
+    id: 'booking-5',
+    hallName: 'LHC Seminar Hall - I',
+    date: '2024-01-30',
+    timeSlot: '11:00-13:00',
+    purpose: 'Faculty Meeting',
+    status: 'pending',
+    createdAt: '2024-01-19'
   }
 ]
 

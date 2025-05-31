@@ -18,6 +18,7 @@ const app: Express = express();
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:4000',
+  'http://localhost:9002',
   'https://seminar-hall-booking.onrender.com'
 ];
 

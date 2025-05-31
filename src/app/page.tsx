@@ -7,41 +7,70 @@ import Image from 'next/image';
 import Header from '@/components/shared/Header';
 import { useState, useEffect } from 'react';
 
-// Official Institute Auditoriums and Board Rooms
+// Official Institute Seminar Halls
 const hallImages = [
   {
     id: 1,
     url: '/images/halls/apex-auditorium.jpg',
     fallbackUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop&crop=center',
-    title: 'Apex Block Auditorium',
-    description: 'State-of-the-art auditorium for graduation ceremonies, events, and major functions (Capacity: 1000)'
+    title: 'APEX Auditorium',
+    description: 'State-of-the-art auditorium for graduation ceremonies, major events, and institutional functions (Capacity: 1000)'
   },
   {
     id: 2,
     url: '/images/halls/esb-seminar-hall-1.jpg',
     fallbackUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=500&fit=crop&crop=center',
-    title: 'ESB Seminar Hall 1',
+    title: 'ESB Seminar Hall - I',
     description: 'Engineering Sciences Block - Large seminar hall for department events and presentations (Capacity: 315)'
   },
   {
     id: 3,
-    url: '/images/halls/des-hitech-seminar-hall.jpg',
-    fallbackUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=500&fit=crop&crop=center',
-    title: 'DES Hi-Tech Seminar Hall',
-    description: 'Department of Engineering Sciences - Modern hi-tech seminar facility (Capacity: 200)'
+    url: '/images/halls/esb-seminar-hall-2.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=500&fit=crop&crop=center',
+    title: 'ESB Seminar Hall - II',
+    description: 'Engineering Sciences Block - Medium-sized seminar hall for focused academic sessions (Capacity: 140)'
   },
   {
     id: 4,
-    url: '/images/halls/apex-board-room.jpg',
+    url: '/images/halls/esb-seminar-hall-3.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=500&fit=crop&crop=center',
+    title: 'ESB Seminar Hall - III',
+    description: 'Engineering Sciences Block - Versatile seminar hall for workshops and academic events (Capacity: 200)'
+  },
+  {
+    id: 5,
+    url: '/images/halls/des-seminar-hall-1.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1431540015161-0bf868a2d407?w=800&h=500&fit=crop&crop=center',
+    title: 'DES Seminar Hall - I',
+    description: 'Department of Engineering Sciences - Modern seminar facility with advanced AV systems (Capacity: 200)'
+  },
+  {
+    id: 6,
+    url: '/images/halls/des-seminar-hall-2.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&crop=center',
+    title: 'DES Seminar Hall - II',
+    description: 'Department of Engineering Sciences - Collaborative learning environment for seminars (Capacity: 150)'
+  },
+  {
+    id: 7,
+    url: '/images/halls/lhc-seminar-hall-1.jpg',
     fallbackUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=500&fit=crop&crop=center',
-    title: 'Apex Board Room',
-    description: 'Executive board room for governing body meetings and academic council sessions (Capacity: 60)'
+    title: 'LHC Seminar Hall - I',
+    description: 'Lecture Hall Complex - Intimate learning space for focused discussions (Capacity: 115)'
+  },
+  {
+    id: 8,
+    url: '/images/halls/lhc-seminar-hall-2.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1582653291997-079a1c04e5a1?w=800&h=500&fit=crop&crop=center',
+    title: 'LHC Seminar Hall - II',
+    description: 'Lecture Hall Complex - Interactive learning environment for academic sessions (Capacity: 115)'
   }
 ]
 
 export default function LandingPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [imageError, setImageError] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
 
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) =>
@@ -59,9 +88,16 @@ export default function LandingPage() {
 
   // Auto-advance carousel every 5 seconds
   useEffect(() => {
-    const interval = setInterval(nextImage, 5000)
+    if (isPaused) return
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) =>
+        prevIndex === hallImages.length - 1 ? 0 : prevIndex + 1
+      )
+      setImageError(false)
+    }, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [hallImages.length, isPaused])
 
   // Reset error state when image index changes
   useEffect(() => {
@@ -81,8 +117,8 @@ export default function LandingPage() {
                     Welcome to Hall Hub
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Seamlessly book seminar halls for your events. Easy, fast, and reliable.
-                    Manage your bookings with an intuitive interface and get admin approvals efficiently.
+                    Book from 1 auditorium and 7 seminar halls across APEX, ESB, DES, and LHC blocks.
+                    Perfect for graduation ceremonies, department events, workshops, and academic sessions.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
@@ -104,7 +140,11 @@ export default function LandingPage() {
                   </Button>
               </div>
               {/* Image Carousel */}
-              <div className="relative mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last lg:aspect-square shadow-xl">
+              <div
+                className="relative mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last lg:aspect-square shadow-xl"
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+              >
                 <Image
                   src={imageError ? hallImages[currentImageIndex].fallbackUrl : hallImages[currentImageIndex].url}
                   width="600"
@@ -117,16 +157,18 @@ export default function LandingPage() {
                 {/* Navigation Arrows */}
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 hover:scale-110"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10 cursor-pointer"
                   aria-label="Previous image"
+                  type="button"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
 
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 hover:scale-110"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-200 hover:scale-110 z-10 cursor-pointer"
                   aria-label="Next image"
+                  type="button"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
@@ -142,17 +184,21 @@ export default function LandingPage() {
                 </div>
 
                 {/* Dot Indicators */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
                   {hallImages.map((_, index) => (
                     <button
                       key={index}
-                      onClick={() => setCurrentImageIndex(index)}
-                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                      onClick={() => {
+                        setCurrentImageIndex(index);
+                        setImageError(false);
+                      }}
+                      className={`w-3 h-3 rounded-full transition-all duration-200 cursor-pointer ${
                         index === currentImageIndex
                           ? 'bg-white scale-125'
                           : 'bg-white/50 hover:bg-white/75'
                       }`}
                       aria-label={`Go to image ${index + 1}`}
+                      type="button"
                     />
                   ))}
                 </div>
@@ -169,7 +215,7 @@ export default function LandingPage() {
                 <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground">Key Features</div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-foreground">Everything You Need for Hall Bookings</h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Hall Hub offers a comprehensive suite of tools to make seminar hall bookings effortless for faculty and administrators.
+                  Streamlined booking system for our institute's auditoriums and board rooms. From large graduation ceremonies to intimate board meetings, find the perfect venue for your academic events.
                 </p>
               </div>
             </div>
