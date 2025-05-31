@@ -21,9 +21,9 @@ export default function LoginPage() {
       console.log('Login response:', response)
 
       // The response is from axios, so the data is in response.data
-      const userData = response.data
+      const userData = response.data as any
 
-      if (userData.token) {
+      if (userData?.token) {
         // Store token in localStorage
         localStorage.setItem('token', userData.token)
         localStorage.setItem('user', JSON.stringify({

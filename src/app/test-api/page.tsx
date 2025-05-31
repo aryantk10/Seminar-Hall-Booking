@@ -19,12 +19,12 @@ export default function TestAPIPage() {
           success: response.ok
         }
       }))
-    } catch (error) {
+    } catch (error: any) {
       setResults(prev => ({
         ...prev,
         [name]: {
           status: 'ERROR',
-          data: error.message,
+          data: error?.message || 'Unknown error',
           success: false
         }
       }))
@@ -57,12 +57,12 @@ export default function TestAPIPage() {
           apiUrl: API_URL
         }
       }))
-    } catch (error) {
+    } catch (error: any) {
       setResults(prev => ({
         ...prev,
         'login-test': {
           status: 'ERROR',
-          data: error.message,
+          data: error?.message || 'Unknown error',
           success: false
         }
       }))
