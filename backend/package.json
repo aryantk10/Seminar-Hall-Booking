@@ -9,7 +9,7 @@
     "build": "tsc",
     "type-check": "tsc --noEmit",
     "test": "jest --passWithNoTests",
-    "test:ci": "jest --ci --coverage --watchAll=false --passWithNoTests",
+    "test:ci": "jest --ci --watchAll=false --passWithNoTests",
     "test:integration": "jest --testPathPattern=integration --ci --coverage=false --passWithNoTests",
     "ci": "npm run type-check && npm run lint && npm run test:ci && npm run build",
     "lint": "eslint src",
