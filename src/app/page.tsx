@@ -1,10 +1,60 @@
+'use client'
+
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowRight, Building, CalendarCheck, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Building, CalendarCheck, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Header from '@/components/shared/Header';
+import { useState, useEffect } from 'react';
+
+// Seminar hall images
+const hallImages = [
+  {
+    id: 1,
+    url: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=500&fit=crop&crop=center',
+    title: 'Modern Conference Hall',
+    description: 'State-of-the-art conference room with advanced AV equipment'
+  },
+  {
+    id: 2,
+    url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=500&fit=crop&crop=center',
+    title: 'Executive Seminar Room',
+    description: 'Professional seminar space perfect for corporate meetings'
+  },
+  {
+    id: 3,
+    url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop&crop=center',
+    title: 'Large Auditorium',
+    description: 'Spacious auditorium for large-scale events and presentations'
+  },
+  {
+    id: 4,
+    url: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=500&fit=crop&crop=center',
+    title: 'Training Workshop Room',
+    description: 'Interactive workshop space with flexible seating arrangements'
+  }
+]
 
 export default function LandingPage() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  const nextImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === hallImages.length - 1 ? 0 : prevIndex + 1
+    )
+  }
+
+  const prevImage = () => {
+    setCurrentImageIndex((prevIndex) =>
+      prevIndex === 0 ? hallImages.length - 1 : prevIndex - 1
+    )
+  }
+
+  // Auto-advance carousel every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(nextImage, 5000)
+    return () => clearInterval(interval)
+  }, [])
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -41,14 +91,59 @@ export default function LandingPage() {
                     </Link>
                   </Button>
               </div>
-              <Image
-                src="https://placehold.co/600x400.png"
-                width="600"
-                height="400"
-                alt="Seminar Hall"
-                data-ai-hint="modern auditorium"
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square shadow-xl"
-              />
+              {/* Image Carousel */}
+              <div className="relative mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last lg:aspect-square shadow-xl">
+                <Image
+                  src={hallImages[currentImageIndex].url}
+                  width="600"
+                  height="400"
+                  alt={hallImages[currentImageIndex].title}
+                  className="w-full h-full object-cover transition-opacity duration-500"
+                />
+
+                {/* Navigation Arrows */}
+                <button
+                  onClick={prevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 hover:scale-110"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 hover:scale-110"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+
+                {/* Image Info Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+                  <h3 className="text-white font-semibold text-lg mb-1">
+                    {hallImages[currentImageIndex].title}
+                  </h3>
+                  <p className="text-white/90 text-sm">
+                    {hallImages[currentImageIndex].description}
+                  </p>
+                </div>
+
+                {/* Dot Indicators */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                  {hallImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        index === currentImageIndex
+                          ? 'bg-white scale-125'
+                          : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
