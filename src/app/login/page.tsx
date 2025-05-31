@@ -24,7 +24,14 @@ export default function LoginPage() {
       console.log('Login response:', response)
 
       // The response is from axios, so the data is in response.data
-      const userData = response.data as any
+      const userData = response.data as {
+        _id: string;
+        name: string;
+        email: string;
+        role: string;
+        department?: string;
+        token: string;
+      }
 
       if (userData?.token) {
         // Store token in localStorage
@@ -47,10 +54,14 @@ export default function LoginPage() {
       } else {
         setError('Login failed. Please check your credentials.')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login error:', error)
-      if (error.response?.data?.message) {
-        setError(error.response.data.message)
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+
+      if (errorMessage) {
+        setError(errorMessage)
       } else {
         setError('Login failed. Please check your credentials and try again.')
       }
@@ -186,14 +197,14 @@ export default function LoginPage() {
             <div className="mt-3 text-center">
               <div className="text-sm text-gray-600">
                 Use your registered credentials from the MongoDB database.<br />
-                If you don't have an account, please register first.
+                If you don&apos;t have an account, please register first.
               </div>
             </div>
           </div>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up here
               </Link>

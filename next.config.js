@@ -8,8 +8,7 @@ const nextConfig = {
   // Enable standalone output for better deployment
   output: 'standalone',
   
-  // Optimize for production
-  swcMinify: true,
+  // SWC minification is enabled by default in Next.js 13+
   
   // Image optimization
   images: {

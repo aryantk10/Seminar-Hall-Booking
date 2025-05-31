@@ -1,22 +1,19 @@
 import axios from 'axios';
 
-// EMERGENCY FIX: Force production URL when deployed
+// PROPER: Environment-based configuration
 const getApiUrl = (): string => {
-  // If we're on the deployed domain, force production URL
-  if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
-    console.log('🔗 DEPLOYED: Using production backend URL');
-    return 'https://seminar-hall-booking-backend.onrender.com/api';
+  // Always prefer environment variable
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (envUrl) {
+    console.log('🔗 Using environment API URL:', envUrl);
+    return envUrl;
   }
 
-  // Use environment variable if available
-  if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL !== 'http://localhost:5000') {
-    console.log('🔗 Using environment variable API URL:', process.env.NEXT_PUBLIC_API_URL);
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-
-  // Development fallback
-  console.log('🔗 Using development API URL');
-  return 'http://localhost:5000/api';
+  // Fallback for development
+  const fallbackUrl = 'http://localhost:5000/api';
+  console.log('🔗 No environment variable set, using fallback:', fallbackUrl);
+  return fallbackUrl;
 };
 
 const API_URL = getApiUrl();
@@ -43,11 +40,31 @@ api.interceptors.request.use(
 );
 
 // Auth API
+interface LoginData {
+  email: string;
+  password: string;
+}
+
+interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+  role?: string;
+  department?: string;
+}
+
+interface UpdateProfileData {
+  name?: string;
+  email?: string;
+  department?: string;
+  password?: string;
+}
+
 export const auth = {
-  register: (data: any) => api.post('/auth/register', data),
-  login: (data: any) => api.post('/auth/login', data),
+  register: (data: RegisterData) => api.post('/auth/register', data),
+  login: (data: LoginData) => api.post('/auth/login', data),
   getProfile: () => api.get('/auth/profile'),
-  updateProfile: (data: any) => api.put('/auth/profile', data),
+  updateProfile: (data: UpdateProfileData) => api.put('/auth/profile', data),
 };
 
 // Halls API
