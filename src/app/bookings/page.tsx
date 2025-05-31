@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 
 // Mock bookings data for Cypress testing

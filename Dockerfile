@@ -43,8 +43,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Set environment variable for build
+# Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_PUBLIC_API_URL http://localhost:5000
 
 # Build the application
 RUN npm run build

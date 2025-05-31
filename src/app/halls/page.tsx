@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 
 // Mock hall data for Cypress testing
