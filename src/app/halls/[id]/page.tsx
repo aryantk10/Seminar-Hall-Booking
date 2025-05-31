@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 // Official Institute Hall Details
 interface Hall {
@@ -158,10 +159,13 @@ export default function HallDetailsPage({ params }: { params: { id: string } }) 
         <div className="bg-white rounded-lg shadow-lg overflow-hidden" data-cy="hall-details">
           {/* Hall Image */}
           <div className="h-64 bg-gray-200">
-            <img 
-              src={hall.images[0]} 
+            <Image
+              src={hall.images[0]}
               alt={hall.name}
+              width={800}
+              height={256}
               className="w-full h-full object-cover"
+              priority
             />
           </div>
 

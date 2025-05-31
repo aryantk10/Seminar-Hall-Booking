@@ -97,7 +97,7 @@ export default function LandingPage() {
       setImageError(false)
     }, 5000)
     return () => clearInterval(interval)
-  }, [hallImages.length, isPaused])
+  }, [isPaused]) // hallImages.length is constant, removed from dependencies
 
   // Reset error state when image index changes
   useEffect(() => {
