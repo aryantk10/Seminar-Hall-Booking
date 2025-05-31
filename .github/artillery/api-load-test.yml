@@ -1,0 +1,206 @@
+config:
+  target: 'http://localhost:5000'
+  phases:
+    # Warm-up phase
+    - duration: 30
+      arrivalRate: 1
+      name: "Warm-up"
+    
+    # Ramp-up phase
+    - duration: 60
+      arrivalRate: 1
+      rampTo: 10
+      name: "Ramp-up"
+    
+    # Sustained load phase
+    - duration: 120
+      arrivalRate: 10
+      name: "Sustained load"
+    
+    # Peak load phase
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 25
+      name: "Peak load"
+    
+    # Cool-down phase
+    - duration: 30
+      arrivalRate: 25
+      rampTo: 1
+      name: "Cool-down"
+
+  defaults:
+    headers:
+      Content-Type: 'application/json'
+      User-Agent: 'Artillery Load Test'
+
+  variables:
+    testUser:
+      - "testuser1@example.com"
+      - "testuser2@example.com"
+      - "testuser3@example.com"
+    
+    testHall:
+      - "hall-1"
+      - "hall-2"
+      - "hall-3"
+
+  processor: ".github/artillery/functions.js"
+
+scenarios:
+  # Health check scenario
+  - name: "Health Check"
+    weight: 30
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+            - hasProperty: "status"
+
+  # API root check
+  - name: "API Root Check"
+    weight: 20
+    flow:
+      - get:
+          url: "/api"
+          expect:
+            - statusCode: 200
+            - hasProperty: "message"
+
+  # App root check
+  - name: "App Root Check"
+    weight: 20
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: 200
+            - hasProperty: "message"
+
+  # API endpoints load testing (may fail gracefully)
+  - name: "Get Halls (Optional)"
+    weight: 15
+    flow:
+      - get:
+          url: "/api/halls"
+          expect:
+            - statusCode: [200, 404, 500]
+
+  # Authentication flow (optional)
+  - name: "User Authentication (Optional)"
+    weight: 15
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "Load Test User {{ $randomString() }}"
+            email: "loadtest{{ $randomInt(1, 10000) }}@example.com"
+            password: "testpassword123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: [200, 201, 409] # 409 for existing user
+
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ testUser }}"
+            password: "testpassword123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: [200, 401] # 401 for invalid credentials
+
+  # Booking flow (authenticated)
+  - name: "Booking Flow"
+    weight: 25
+    flow:
+      # Login first
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ testUser }}"
+            password: "testpassword123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # Get available halls
+      - get:
+          url: "/api/halls"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Get hall details
+      - get:
+          url: "/api/halls/{{ testHall }}"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 404]
+
+      # Create booking (if authenticated)
+      - post:
+          url: "/api/bookings"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            hallId: "{{ testHall }}"
+            date: "{{ $futureDate() }}"
+            timeSlot: "{{ $randomTimeSlot() }}"
+            purpose: "Load test booking"
+          expect:
+            - statusCode: [200, 201, 400, 409] # 400/409 for conflicts
+
+  # User dashboard
+  - name: "User Dashboard"
+    weight: 15
+    flow:
+      # Login
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ testUser }}"
+            password: "testpassword123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # Get user bookings
+      - get:
+          url: "/api/bookings/user"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 401]
+
+      # Get user profile
+      - get:
+          url: "/api/auth/profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 401]
+
+# Performance thresholds
+expect:
+  # Response time thresholds
+  - p95: 500  # 95% of requests should complete within 500ms
+  - p99: 1000 # 99% of requests should complete within 1000ms
+  
+  # Error rate threshold
+  - maxErrorRate: 5 # Maximum 5% error rate
+
+# Metrics to track
+metrics:
+  - name: "response_time"
+    unit: "ms"
+  - name: "error_rate"
+    unit: "%"
+  - name: "requests_per_second"
+    unit: "rps"

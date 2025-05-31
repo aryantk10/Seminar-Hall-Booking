@@ -7,47 +7,54 @@ import Image from 'next/image';
 import Header from '@/components/shared/Header';
 import { useState, useEffect } from 'react';
 
-// Seminar hall images
+// Seminar hall images - using actual hall names from your application
 const hallImages = [
   {
     id: 1,
-    url: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=500&fit=crop&crop=center',
-    title: 'Modern Conference Hall',
-    description: 'State-of-the-art conference room with advanced AV equipment'
+    url: '/images/halls/esb-seminar-hall-1.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=500&fit=crop&crop=center',
+    title: 'ESB Seminar Hall - I',
+    description: 'Engineering Sciences Block - Modern seminar hall with projector and Wi-Fi (Capacity: 100)'
   },
   {
     id: 2,
-    url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=500&fit=crop&crop=center',
-    title: 'Executive Seminar Room',
-    description: 'Professional seminar space perfect for corporate meetings'
+    url: '/images/halls/esb-seminar-hall-2.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=500&fit=crop&crop=center',
+    title: 'ESB Seminar Hall - II',
+    description: 'Engineering Sciences Block - Advanced seminar space with sound system and microphone (Capacity: 120)'
   },
   {
     id: 3,
-    url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop&crop=center',
-    title: 'Large Auditorium',
-    description: 'Spacious auditorium for large-scale events and presentations'
+    url: '/images/halls/lhc-seminar-hall.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=500&fit=crop&crop=center',
+    title: 'LHC Seminar Hall - II',
+    description: 'Lecture Hall Complex - Large presentation hall with interactive whiteboard (Capacity: 180)'
   },
   {
     id: 4,
-    url: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=500&fit=crop&crop=center',
-    title: 'Training Workshop Room',
-    description: 'Interactive workshop space with flexible seating arrangements'
+    url: '/images/halls/apex-auditorium.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=500&fit=crop&crop=center',
+    title: 'APEX Auditorium',
+    description: 'APEX Block - Large venue with LED screen and professional sound system (Capacity: 500)'
   }
 ]
 
 export default function LandingPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imageError, setImageError] = useState(false)
 
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === hallImages.length - 1 ? 0 : prevIndex + 1
     )
+    setImageError(false) // Reset error state when changing images
   }
 
   const prevImage = () => {
     setCurrentImageIndex((prevIndex) =>
       prevIndex === 0 ? hallImages.length - 1 : prevIndex - 1
     )
+    setImageError(false) // Reset error state when changing images
   }
 
   // Auto-advance carousel every 5 seconds
@@ -55,6 +62,11 @@ export default function LandingPage() {
     const interval = setInterval(nextImage, 5000)
     return () => clearInterval(interval)
   }, [])
+
+  // Reset error state when image index changes
+  useEffect(() => {
+    setImageError(false)
+  }, [currentImageIndex])
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -94,11 +106,12 @@ export default function LandingPage() {
               {/* Image Carousel */}
               <div className="relative mx-auto aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last lg:aspect-square shadow-xl">
                 <Image
-                  src={hallImages[currentImageIndex].url}
+                  src={imageError ? hallImages[currentImageIndex].fallbackUrl : hallImages[currentImageIndex].url}
                   width="600"
                   height="400"
                   alt={hallImages[currentImageIndex].title}
                   className="w-full h-full object-cover transition-opacity duration-500"
+                  onError={() => setImageError(true)}
                 />
 
                 {/* Navigation Arrows */}
