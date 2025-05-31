@@ -30,7 +30,7 @@ interface LoginFormProps {
   userType: 'faculty' | 'admin';
 }
 
-const REGISTERED_USERS_STORAGE_KEY = "hallHubRegisteredUsers";
+// const REGISTERED_USERS_STORAGE_KEY = "hallHubRegisteredUsers";
 
 export default function LoginForm({ userType }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +50,8 @@ export default function LoginForm({ userType }: LoginFormProps) {
     setIsLoading(true);
     try {
       const response = await auth.login(values);
-      const userData = response.data;
-      
+      const userData = response.data as User;
+
       // Check if the user has the correct role
       if (userType === 'admin' && userData.role !== 'admin') {
         toast({
@@ -74,16 +74,16 @@ export default function LoginForm({ userType }: LoginFormProps) {
       }
 
       // Store the token
-      localStorage.setItem('token', userData.token);
-      
+      localStorage.setItem('token', userData.token || '');
+
       // Login the user
       login(userData);
-      
+
       toast({
         title: "Login Successful",
         description: `Welcome back, ${userData.name}!`,
       });
-      
+
       router.push("/dashboard");
     } catch (error: any) {
       toast({

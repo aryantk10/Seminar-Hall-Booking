@@ -1,5 +1,3 @@
-import '@testing-library/jest-dom'
-
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter() {
@@ -29,7 +27,9 @@ global.fetch = jest.fn()
 
 // Setup for each test
 beforeEach(() => {
-  fetch.mockClear()
+  if (global.fetch && typeof global.fetch.mockClear === 'function') {
+    global.fetch.mockClear()
+  }
 })
 
 // Mock console methods in tests

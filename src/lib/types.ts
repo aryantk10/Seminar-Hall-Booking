@@ -29,4 +29,5 @@ export interface User {
   role: 'faculty' | 'admin';
   department?: string;
   avatarDataUrl?: string; // Added for profile picture
+  token?: string; // Added for authentication token
 }
