@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 9002",
     "build": "next build",
-    "start": "next start -p 9002",
+    "start": "node server.js",
     "test": "jest --coverage --watchAll=false --passWithNoTests",
     "test:watch": "jest --watch",
     "test:ci": "jest --watchAll=false --ci --passWithNoTests",

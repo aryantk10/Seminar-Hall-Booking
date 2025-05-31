@@ -280,12 +280,12 @@ jobs:
       uses: cypress-io/github-action@v6
       with:
         start: echo "Servers already running"
-        wait-on: 'http://localhost:3000, http://localhost:5000/health'
+        wait-on: 'http://localhost:9002, http://localhost:5000/health'
         wait-on-timeout: 120
         browser: chrome
         record: false
       env:
-        CYPRESS_baseUrl: http://localhost:3000
+        CYPRESS_baseUrl: http://localhost:9002
         CYPRESS_apiUrl: http://localhost:5000
 
     - name: Upload Cypress screenshots
