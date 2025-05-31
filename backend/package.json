@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "jest --coverage",
     "ci": "npm run test && npm run build",
-    "lint": "eslint"
+    "lint": "eslint src"
   },
   "keywords": [],
   "author": "",

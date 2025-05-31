@@ -6,6 +6,12 @@ on:
   workflow_dispatch:
 
 jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello World
+        run: echo "CI/CD is working!"
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -26,3 +32,24 @@ jobs:
         run: |
           cd backend
           npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run tests
+        run: |
+          cd backend
+          npm test
