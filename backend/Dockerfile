@@ -1,4 +1,4 @@
-# Multi-stage build for frontend
+# Multi-stage build for backend
 FROM node:18-alpine AS base
 
 # Install dependencies only when needed
@@ -25,7 +25,7 @@ RUN npm ci
 COPY . .
 
 # Expose port
-EXPOSE 9002
+EXPOSE 5000
 
 # Start development server
 CMD ["npm", "run", "dev"]
@@ -43,9 +43,6 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Set environment variable for build
-ENV NEXT_TELEMETRY_DISABLED 1
-
 # Build the application
 RUN npm run build
 
@@ -55,30 +52,25 @@ WORKDIR /app
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Set environment variables
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+RUN adduser --system --uid 1001 backend
 
 # Copy production dependencies
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy built application
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 
 # Change ownership to non-root user
-RUN chown -R nextjs:nodejs /app
-USER nextjs
+RUN chown -R backend:nodejs /app
+USER backend
 
 # Expose port
-EXPOSE 9002
+EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:9002/api/health || exit 1
+  CMD node -e "require('http').get('http://localhost:5000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
 
 # Start production server
 CMD ["npm", "run", "start"]

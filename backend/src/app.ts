@@ -20,9 +20,34 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Health check route
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    message: 'Seminar Hall Booking API is running!',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Debug route to test API
+app.get('/api', (req: Request, res: Response) => {
+  res.json({ message: 'API is working', routes: ['auth', 'halls', 'bookings'] });
+});
+
+// API Routes
+console.log('Registering auth routes...');
 app.use('/api/auth', authRoutes);
+console.log('Registering hall routes...');
 app.use('/api/halls', hallRoutes);
+console.log('Registering booking routes...');
 app.use('/api/bookings', bookingRoutes);
 
 // Error handling middleware
@@ -35,8 +60,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 const connectDB = async () => {
   try {
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/seminar-hall-booking';
+    console.log('Connecting to MongoDB:', mongoURI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
     await mongoose.connect(mongoURI);
     console.log('MongoDB connected successfully');
+    console.log('Database name:', mongoose.connection.db.databaseName);
   } catch (error) {
     console.error('MongoDB connection error:', error);
     process.exit(1);

@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Backend API (Development)
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    container_name: seminar-hall-backend-dev
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb+srv://aryantk1020:Timber2014*@cluster0.bk2olft.mongodb.net/seminar-hall-booking?retryWrites=true&w=majority&appName=Cluster0
+      - JWT_SECRET=seminar-hall-booking-secret-key-2024
+      - PORT=5000
+    depends_on: []
+    networks:
+      - app-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/.env:/app/.env:ro
+
+  # Frontend Application (Development)
+  frontend:
+    build:
+      context: .
+      target: dev
+    container_name: seminar-hall-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "9002:9002"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes: {}
