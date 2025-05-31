@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Booking } from "@/lib/types";
-import { Check, Loader2, X, RotateCcw, Trash2 } from "lucide-react";
+import { Check, Loader2, X, Trash2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { checkPendingConflictWithApproved } from "@/lib/bookingUtils";

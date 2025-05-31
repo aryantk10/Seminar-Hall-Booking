@@ -40,10 +40,18 @@ export default function MyBookingsPage() {
 
       // Check for notifications
       const allNotifications = JSON.parse(localStorage.getItem("userNotifications") || "[]");
+      interface Notification {
+        userId: string;
+        message: string;
+        timestamp: string | Date;
+      }
+
       const userNotifications = allNotifications
-        .filter((n: any) => n.userId === user.id)
-        .map((n: any) => ({ ...n, timestamp: new Date(n.timestamp) }))
-        .sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime());
+        .filter((n: Notification) => n.userId === user.id)
+        .map((n: Notification) => ({ ...n, timestamp: new Date(n.timestamp) }))
+        .sort((a: Notification, b: Notification) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
       setNotifications(userNotifications);
     }
     setLoading(false);
@@ -75,7 +83,7 @@ export default function MyBookingsPage() {
 
   const clearNotifications = () => {
     const allNotifications = JSON.parse(localStorage.getItem("userNotifications") || "[]");
-    const otherUsersNotifications = allNotifications.filter((n: any) => n.userId !== user?.id);
+    const otherUsersNotifications = allNotifications.filter((n: { userId: string }) => n.userId !== user?.id);
     localStorage.setItem("userNotifications", JSON.stringify(otherUsersNotifications));
     setNotifications([]);
   };

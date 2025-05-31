@@ -1,8 +1,20 @@
 import Link from 'next/link'
 
 // Official Institute Hall Details
-const getHallDetails = (id: string) => {
-  const halls: Record<string, any> = {
+interface Hall {
+  id: string;
+  name: string;
+  capacity: number;
+  location: string;
+  description: string;
+  amenities: string[];
+  images: string[];
+  isAvailable: boolean;
+  pricePerHour: number;
+}
+
+const getHallDetails = (id: string): Hall => {
+  const halls: Record<string, Hall> = {
     // Auditorium
     'apex-auditorium': {
       id: 'apex-auditorium',

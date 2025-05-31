@@ -215,7 +215,7 @@ export default function LandingPage() {
                 <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground">Key Features</div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-foreground">Everything You Need for Hall Bookings</h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Streamlined booking system for our institute's auditoriums and board rooms. From large graduation ceremonies to intimate board meetings, find the perfect venue for your academic events.
+                  Streamlined booking system for our institute&apos;s auditoriums and board rooms. From large graduation ceremonies to intimate board meetings, find the perfect venue for your academic events.
                 </p>
               </div>
             </div>

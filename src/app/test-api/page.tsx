@@ -26,12 +26,12 @@ export default function TestAPIPage() {
           success: response.ok
         }
       }))
-    } catch (error: any) {
+    } catch (error: unknown) {
       setResults(prev => ({
         ...prev,
         [name]: {
           status: 'ERROR',
-          data: error?.message || 'Unknown error',
+          data: error instanceof Error ? error.message : 'Unknown error',
           success: false
         }
       }))
@@ -64,12 +64,12 @@ export default function TestAPIPage() {
           apiUrl: API_URL
         }
       }))
-    } catch (error: any) {
+    } catch (error: unknown) {
       setResults(prev => ({
         ...prev,
         'login-test': {
           status: 'ERROR',
-          data: error?.message || 'Unknown error',
+          data: error instanceof Error ? error.message : 'Unknown error',
           success: false
         }
       }))

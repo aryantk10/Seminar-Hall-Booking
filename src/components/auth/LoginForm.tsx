@@ -85,10 +85,10 @@ export default function LoginForm({ userType }: LoginFormProps) {
       });
 
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Login Failed",
-        description: error.response?.data?.message || "Invalid email or password.",
+        description: error instanceof Error ? error.message : "Invalid email or password.",
         variant: "destructive",
       });
     } finally {

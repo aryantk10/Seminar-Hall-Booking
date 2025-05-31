@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import type { User } from "@/lib/types";
+// User type used in login function
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { auth } from "@/lib/api";
@@ -93,14 +93,16 @@ export default function RegistrationForm({ isAdminRegistration = false }: Regist
       });
       
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Registration Failed",
-        description: error.response?.data?.message || "An error occurred during registration.",
+        description: error instanceof Error ? error.message : "An error occurred during registration.",
         variant: "destructive",
       });
       
-      if (error.response?.data?.message === "User already exists") {
+      // Handle specific error cases if needed
+      const errorObj = error as { response?: { data?: { message?: string } } };
+      if (errorObj.response?.data?.message === "User already exists") {
         form.setError("email", { 
           type: "manual", 
           message: "This email address is already in use." 

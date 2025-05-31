@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { format,isSameDay } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Clock, HelpCircle, XCircle, Building } from "lucide-react";
+import { CheckCircle, Clock, HelpCircle, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select as ShadcnSelect, SelectContent as ShadcnSelectContent, SelectItem as ShadcnSelectItem, SelectTrigger as ShadcnSelectTrigger, SelectValue as ShadcnSelectValue } from "@/components/ui/select";
 
