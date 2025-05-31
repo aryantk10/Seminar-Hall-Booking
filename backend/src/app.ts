@@ -15,13 +15,18 @@ dotenv.config();
 const app: Express = express();
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:4000',
+  'https://seminar-hall-booking.onrender.com'
+];
+
+if (process.env.CORS_ORIGIN) {
+  allowedOrigins.push(process.env.CORS_ORIGIN);
+}
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:4000',
-    'https://seminar-hall-booking.onrender.com',
-    process.env.CORS_ORIGIN
-  ].filter(Boolean),
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(morgan('dev'));
