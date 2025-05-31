@@ -54,16 +54,62 @@ app.get('/health', (req: Request, res: Response) => {
 
 // Debug route to test API
 app.get('/api', (req: Request, res: Response) => {
-  res.json({ message: 'API is working', routes: ['auth', 'halls', 'bookings'] });
+  res.json({
+    message: 'API is working',
+    routes: ['auth', 'halls', 'bookings'],
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    port: process.env.PORT
+  });
+});
+
+// Simple auth test route
+app.get('/api/auth', (req: Request, res: Response) => {
+  res.json({
+    message: 'Auth API is working',
+    endpoints: [
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'GET /api/auth/profile',
+      'PUT /api/auth/profile'
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Simple login test route
+app.post('/api/auth/test-login', (req: Request, res: Response) => {
+  res.json({
+    message: 'Login endpoint is accessible',
+    body: req.body,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // API Routes
 console.log('Registering auth routes...');
-app.use('/api/auth', authRoutes);
+try {
+  app.use('/api/auth', authRoutes);
+  console.log('✅ Auth routes registered successfully');
+} catch (error) {
+  console.error('❌ Error registering auth routes:', error);
+}
+
 console.log('Registering hall routes...');
-app.use('/api/halls', hallRoutes);
+try {
+  app.use('/api/halls', hallRoutes);
+  console.log('✅ Hall routes registered successfully');
+} catch (error) {
+  console.error('❌ Error registering hall routes:', error);
+}
+
 console.log('Registering booking routes...');
-app.use('/api/bookings', bookingRoutes);
+try {
+  app.use('/api/bookings', bookingRoutes);
+  console.log('✅ Booking routes registered successfully');
+} catch (error) {
+  console.error('❌ Error registering booking routes:', error);
+}
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
