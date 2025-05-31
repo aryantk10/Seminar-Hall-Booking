@@ -49,6 +49,19 @@ export default function Header() {
           </Link>
         </div>
         <nav className="flex items-center gap-2">
+          {!user && !loading && (
+            <div className="hidden md:flex items-center gap-4 mr-4">
+              <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">
+                Home
+              </Link>
+              <Link href="/halls" className="text-sm font-medium hover:text-primary transition-colors">
+                Halls
+              </Link>
+              <Link href="/bookings" className="text-sm font-medium hover:text-primary transition-colors">
+                Bookings
+              </Link>
+            </div>
+          )}
           {loading ? (
             <div className="h-8 w-20 animate-pulse rounded-md bg-muted"></div>
           ) : user ? (

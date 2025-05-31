@@ -646,7 +646,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Production Deployment Status
     needs: [deploy-staging]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main'
 
     steps:
     - name: Production deployment info

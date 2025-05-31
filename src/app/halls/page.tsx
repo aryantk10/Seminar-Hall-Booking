@@ -99,6 +99,10 @@ export default function HallsPage() {
     setImageErrors(prev => ({ ...prev, [hallId]: true }))
   }
 
+  const handleCalendarView = () => {
+    alert('Calendar view would be implemented here')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -138,11 +142,11 @@ export default function HallsPage() {
         {/* Hall List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-cy="hall-list">
           {mockHalls.map((hall) => (
-            <div
+            <Link
               key={hall.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              href={`/halls/${hall.id}`}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer block"
               data-cy="hall-card"
-              onClick={() => window.location.href = `/halls/${hall.id}`}
             >
               {/* Hall Image */}
               <div className="relative h-48 w-full">
@@ -197,29 +201,28 @@ export default function HallsPage() {
                   >
                     {hall.isAvailable ? 'Available' : 'Occupied'}
                   </span>
-                  <button
+                  <span
                     className={`px-4 py-2 rounded-md text-sm font-medium ${
                       hall.isAvailable
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-300 text-gray-500'
                     }`}
-                    disabled={!hall.isAvailable}
                     data-cy="book-hall-button"
                   >
                     {hall.isAvailable ? 'Book Now' : 'Unavailable'}
-                  </button>
+                  </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
         {/* Calendar View Toggle */}
         <div className="mt-8 text-center">
-          <button 
+          <button
             className="bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 font-medium"
             data-cy="calendar-view"
-            onClick={() => alert('Calendar view would be implemented here')}
+            onClick={handleCalendarView}
           >
             📅 Switch to Calendar View
           </button>
