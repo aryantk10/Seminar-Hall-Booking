@@ -69,9 +69,9 @@ export default function AdminReportsPage() {
 
   const reportStats = useMemo(() => {
     const totalBookings = bookings.length;
-    const pendingCount = bookings.filter(b => b.status === 'pending').length;
-    const approvedCount = bookings.filter(b => b.status === 'approved').length;
-    const rejectedCount = bookings.filter(b => b.status === 'rejected').length;
+    const pendingCount = bookings.filter((b: Booking) => b.status === 'pending').length;
+    const approvedCount = bookings.filter((b: Booking) => b.status === 'approved').length;
+    const rejectedCount = bookings.filter((b: Booking) => b.status === 'rejected').length;
     return { totalBookings, pendingCount, approvedCount, rejectedCount };
   }, [bookings]);
 

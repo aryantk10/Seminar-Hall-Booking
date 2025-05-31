@@ -23,8 +23,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_FRONTEND: ${{ github.repository }}-frontend
-  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
+  IMAGE_NAME_FRONTEND: ${{ github.repository_owner }}/seminar-hall-booking-frontend
+  IMAGE_NAME_BACKEND: ${{ github.repository_owner }}/seminar-hall-booking-backend
   NODE_VERSION: '18'
 
 jobs:
@@ -64,18 +64,21 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm ci || echo "Frontend dependencies failed"
-        cd backend && npm ci || echo "Backend dependencies failed"
+        echo "Installing frontend dependencies..."
+        npm ci
+        echo "Installing backend dependencies..."
+        cd backend && npm ci
 
     - name: Run ESLint
-      run: npm run lint || echo "Linting failed"
+      run: npm run lint
       continue-on-error: true
 
     - name: TypeScript check
       run: |
-        npm run type-check || echo "Frontend TypeScript check failed"
-        cd backend && npm run type-check || echo "Backend TypeScript check failed"
-      continue-on-error: true
+        echo "Checking frontend TypeScript..."
+        npm run type-check
+        echo "Checking backend TypeScript..."
+        cd backend && npm run type-check
 
     - name: Security audit
       run: |
@@ -105,8 +108,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm ci || echo "Frontend dependencies failed"
-        cd backend && npm ci || echo "Backend dependencies failed"
+        echo "Installing frontend dependencies..."
+        npm ci
+        echo "Installing backend dependencies..."
+        cd backend && npm ci
 
     - name: Run frontend tests
       run: npm test || echo "Frontend tests failed"
