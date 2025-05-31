@@ -15,23 +15,5 @@ services:
       - key: NEXT_PUBLIC_API_URL
         value: https://seminar-hall-booking-backend.onrender.com/api
 
-  # Backend Service
-  - type: web
-    name: seminar-hall-booking-backend
-    env: node
-    region: oregon
-    plan: free
-    rootDir: backend
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-      - key: MONGODB_URI
-        value: mongodb+srv://aryantk10:Aryan%40123@cluster0.ixqhj.mongodb.net/seminar-hall-booking?retryWrites=true&w=majority&appName=Cluster0
-      - key: JWT_SECRET
-        generateValue: true
-      - key: CORS_ORIGIN
-        value: https://seminar-hall-booking-j69q.onrender.com
+# Backend will be deployed separately using backend/render.yaml
+# This avoids monorepo deployment issues
