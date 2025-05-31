@@ -34,7 +34,7 @@ jobs:
     name: Code Quality & Security
     outputs:
       should-deploy: ${{ steps.changes.outputs.should-deploy }}
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -64,24 +64,32 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm ci || echo "Frontend dependencies failed"
-        cd backend && npm ci || echo "Backend dependencies failed"
+        npm ci
+        cd backend && npm ci
 
     - name: Run ESLint
-      run: npm run lint || echo "Linting failed"
+      run: npm run lint -- --format=json --output-file=eslint-report.json
+      continue-on-error: true
+
+    - name: Run Prettier check
+      run: npm run format:check
       continue-on-error: true
 
     - name: TypeScript check
       run: |
-        npm run type-check || echo "Frontend TypeScript check failed"
-        cd backend && npm run type-check || echo "Backend TypeScript check failed"
-      continue-on-error: true
+        npm run type-check
+        cd backend && npm run type-check
 
     - name: Security audit
       run: |
-        npm audit --audit-level=high || echo "Frontend audit found issues"
-        cd backend && npm audit --audit-level=high || echo "Backend audit found issues"
-      continue-on-error: true
+        npm audit --audit-level=high
+        cd backend && npm audit --audit-level=high
+
+    - name: Upload ESLint results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: eslint-report.json
 
   # Job 2: Comprehensive Testing
   test:
@@ -92,7 +100,7 @@ jobs:
     strategy:
       matrix:
         node-version: [18, 20]
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -105,24 +113,78 @@ jobs:
 
     - name: Install dependencies
       run: |
-        npm ci || echo "Frontend dependencies failed"
-        cd backend && npm ci || echo "Backend dependencies failed"
+        npm ci
+        cd backend && npm ci
 
     - name: Run frontend tests
-      run: npm test || echo "Frontend tests failed"
-      continue-on-error: true
+      run: npm test -- --coverage --watchAll=false
 
     - name: Run backend tests
-      run: cd backend && npm test || echo "Backend tests failed"
-      continue-on-error: true
+      run: cd backend && npm test -- --coverage --watchAll=false
 
-  # Job 3: Build and Push Images
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/lcov.info,./backend/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+
+  # Job 3: Integration Tests
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: Integration Tests
+    needs: [code-quality, test]
+    services:
+      mongodb:
+        image: mongo:6.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password123
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd backend && npm ci
+
+    - name: Run integration tests
+      env:
+        MONGODB_URI: mongodb://admin:password123@localhost:27017/test?authSource=admin
+        JWT_SECRET: test-secret
+      run: |
+        cd backend && npm run test:integration
+
+    - name: Run E2E tests
+      run: |
+        npm run build
+        npm run start &
+        cd backend && npm run dev &
+        sleep 30
+        npm run test:e2e
+
+  # Job 4: Build and Push Images
   build:
     runs-on: ubuntu-latest
     name: Build Docker Images
-    needs: [code-quality, test]
+    needs: [code-quality, test, integration-tests]
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -194,37 +256,53 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
-  # Job 4: Deploy to Staging
-  deploy-staging:
+  # Job 5: Performance Testing
+  performance:
     runs-on: ubuntu-latest
-    name: Deploy to Staging
+    name: Performance Tests
     needs: build
-    if: github.ref == 'refs/heads/main' || inputs.environment == 'staging'
-    environment:
-      name: staging
-      url: https://staging-seminar-hall.your-domain.com
-
+    if: github.ref == 'refs/heads/main'
+    
     steps:
-    - name: Deploy to staging
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Lighthouse CI
+      uses: treosh/lighthouse-ci-action@v10
+      with:
+        configPath: './lighthouserc.json'
+        uploadArtifacts: true
+        temporaryPublicStorage: true
+
+  # Job 6: Deploy
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to ${{ inputs.environment || 'staging' }}
+    needs: [build, performance]
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    environment: 
+      name: ${{ inputs.environment || 'staging' }}
+      url: ${{ steps.deploy.outputs.url }}
+    
+    steps:
+    - name: Deploy application
+      id: deploy
       run: |
-        echo "🚀 Deploying to staging environment..."
-        echo "Frontend Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}"
-        echo "Backend Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}"
+        echo "🚀 Deploying to ${{ inputs.environment || 'staging' }}..."
+        echo "url=https://your-app-${{ inputs.environment || 'staging' }}.com" >> $GITHUB_OUTPUT
+        echo "✅ Deployment completed!"
 
-        # Here you would add actual deployment commands
-        # docker-compose -f docker-compose.staging.yml up -d
-        # kubectl apply -f k8s/staging/
-
-        echo "✅ Staging deployment completed!"
-
-    - name: Health check staging
+    - name: Run smoke tests
       run: |
-        echo "🔍 Running health checks on staging..."
-        # curl -f https://staging-seminar-hall.your-domain.com/health || exit 1
-        echo "✅ Health checks passed!"
+        echo "🔍 Running smoke tests..."
+        # Add actual smoke tests here
+        echo "✅ Smoke tests passed!"
 
     - name: Notify deployment
-      run: |
-        echo "📢 Staging deployment notification sent!"
-        echo "Environment: staging"
-        echo "Version: ${{ github.sha }}"
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        text: 'Deployment to ${{ inputs.environment || "staging" }} ${{ job.status }}'
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

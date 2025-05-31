@@ -1,0 +1,201 @@
+name: Notification System
+
+on:
+  workflow_run:
+    workflows: 
+      - "Enhanced CI/CD Pipeline"
+      - "Basic Monitoring & Health Checks"
+      - "Deploy to Production"
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Custom notification message'
+        required: true
+        default: 'Test notification'
+      channel:
+        description: 'Notification channel'
+        required: true
+        default: 'slack'
+        type: choice
+        options:
+          - slack
+          - email
+          - github
+          - all
+
+jobs:
+  notify-slack:
+    runs-on: ubuntu-latest
+    name: Slack Notification
+    if: inputs.channel == 'slack' || inputs.channel == 'all' || github.event_name == 'workflow_run'
+    
+    steps:
+    - name: Determine notification content
+      id: content
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          MESSAGE="${{ inputs.message }}"
+          STATUS="info"
+          WORKFLOW="Manual Notification"
+        else
+          WORKFLOW="${{ github.event.workflow_run.name }}"
+          STATUS="${{ github.event.workflow_run.conclusion }}"
+          
+          case "$STATUS" in
+            "success")
+              MESSAGE="✅ $WORKFLOW completed successfully!"
+              ;;
+            "failure")
+              MESSAGE="❌ $WORKFLOW failed!"
+              ;;
+            "cancelled")
+              MESSAGE="⏹️ $WORKFLOW was cancelled"
+              ;;
+            *)
+              MESSAGE="ℹ️ $WORKFLOW status: $STATUS"
+              ;;
+          esac
+        fi
+        
+        echo "message=$MESSAGE" >> $GITHUB_OUTPUT
+        echo "status=$STATUS" >> $GITHUB_OUTPUT
+        echo "workflow=$WORKFLOW" >> $GITHUB_OUTPUT
+
+    - name: Send Slack notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ steps.content.outputs.status }}
+        text: |
+          ${{ steps.content.outputs.message }}
+          
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+          
+          View Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL || 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK' }}
+        username: 'GitHub Actions'
+        icon_emoji: ':robot_face:'
+        channel: '#seminar-hall-alerts'
+      continue-on-error: true
+
+  notify-email:
+    runs-on: ubuntu-latest
+    name: Email Notification
+    if: (inputs.channel == 'email' || inputs.channel == 'all') && (github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch')
+    
+    steps:
+    - name: Send email notification
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME || 'your-email@gmail.com' }}
+        password: ${{ secrets.EMAIL_PASSWORD || 'your-app-password' }}
+        subject: |
+          ${{ github.event_name == 'workflow_dispatch' && '[Manual]' || '[Alert]' }} Seminar Hall Booking System - ${{ github.event.workflow_run.name || 'Manual Notification' }}
+        body: |
+          Hello,
+          
+          This is an automated notification from the Seminar Hall Booking System.
+          
+          Details:
+          - Repository: ${{ github.repository }}
+          - Workflow: ${{ github.event.workflow_run.name || 'Manual Notification' }}
+          - Status: ${{ github.event.workflow_run.conclusion || 'Manual' }}
+          - Branch: ${{ github.ref_name }}
+          - Commit: ${{ github.sha }}
+          - Author: ${{ github.actor }}
+          - Time: ${{ github.event.workflow_run.updated_at || github.event.head_commit.timestamp }}
+          
+          ${{ github.event_name == 'workflow_dispatch' && inputs.message || 'Please check the workflow logs for more details.' }}
+          
+          View Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          
+          Best regards,
+          GitHub Actions Bot
+        to: ${{ secrets.NOTIFICATION_EMAIL || 'admin@your-domain.com' }}
+        from: ${{ secrets.EMAIL_USERNAME || 'noreply@your-domain.com' }}
+      continue-on-error: true
+
+  notify-github:
+    runs-on: ubuntu-latest
+    name: GitHub Issue Notification
+    if: (inputs.channel == 'github' || inputs.channel == 'all') && github.event.workflow_run.conclusion == 'failure'
+    
+    steps:
+    - name: Create GitHub issue for failure
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const workflowName = '${{ github.event.workflow_run.name }}';
+          const conclusion = '${{ github.event.workflow_run.conclusion }}';
+          const runId = '${{ github.event.workflow_run.id }}';
+          const sha = '${{ github.sha }}';
+          const actor = '${{ github.actor }}';
+          
+          // Check if there's already an open issue for this workflow
+          const existingIssues = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: ['workflow-failure', workflowName.toLowerCase().replace(/\s+/g, '-')],
+            state: 'open'
+          });
+          
+          if (existingIssues.data.length === 0) {
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Workflow Failure: ${workflowName}`,
+              body: `
+              ## Workflow Failure Alert
+              
+              **Workflow:** ${workflowName}
+              **Status:** ${conclusion}
+              **Time:** ${new Date().toISOString()}
+              
+              ### Details
+              - **Commit:** ${sha}
+              - **Author:** ${actor}
+              - **Run ID:** ${runId}
+              
+              ### Actions Required
+              1. Review the workflow logs
+              2. Identify the root cause
+              3. Fix the issue
+              4. Re-run the workflow
+              5. Close this issue once resolved
+              
+              ### Links
+              - [View Workflow Run](${context.payload.workflow_run.html_url})
+              - [View Repository](${context.payload.repository.html_url})
+              
+              ---
+              *This issue was automatically created by GitHub Actions*
+              `,
+              labels: ['bug', 'workflow-failure', 'priority-high', workflowName.toLowerCase().replace(/\s+/g, '-')]
+            });
+            
+            console.log('Created issue:', issue.data.number);
+          } else {
+            console.log('Issue already exists for this workflow failure');
+          }
+
+  notification-summary:
+    runs-on: ubuntu-latest
+    name: Notification Summary
+    needs: [notify-slack, notify-email, notify-github]
+    if: always()
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "📢 Notification Summary"
+        echo "======================"
+        echo "Slack: ${{ needs.notify-slack.result }}"
+        echo "Email: ${{ needs.notify-email.result }}"
+        echo "GitHub: ${{ needs.notify-github.result }}"
+        echo "Timestamp: $(date)"

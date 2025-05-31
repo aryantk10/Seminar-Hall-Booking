@@ -1,0 +1,176 @@
+version: '3.8'
+
+services:
+  # Frontend Application (Staging)
+  frontend:
+    image: ghcr.io/aryantk10/seminar-hall-booking-frontend:latest
+    container_name: seminar-hall-frontend-staging
+    restart: unless-stopped
+    ports:
+      - "9003:9002"  # Different port for staging
+    environment:
+      - NODE_ENV=staging
+      - NEXT_PUBLIC_API_URL=http://localhost:5001/api
+      - NEXT_PUBLIC_APP_NAME=Seminar Hall Booking System (Staging)
+      - NEXT_TELEMETRY_DISABLED=1
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9002"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend-staging.rule=Host(`staging-seminar-hall.localhost`)"
+      - "traefik.http.services.frontend-staging.loadbalancer.server.port=9002"
+
+  # Backend API (Staging)
+  backend:
+    image: ghcr.io/aryantk10/seminar-hall-booking-backend:latest
+    container_name: seminar-hall-backend-staging
+    restart: unless-stopped
+    ports:
+      - "5001:5000"  # Different port for staging
+    environment:
+      - NODE_ENV=staging
+      - MONGODB_URI=${MONGODB_URI_STAGING:-mongodb+srv://aryantk1020:Timber2014*@cluster0.bk2olft.mongodb.net/seminar-hall-booking-staging?retryWrites=true&w=majority&appName=Cluster0}
+      - JWT_SECRET=${JWT_SECRET:-staging-jwt-secret-key}
+      - PORT=5000
+      - CORS_ORIGIN=http://localhost:9003,http://staging-seminar-hall.localhost
+      - LOG_LEVEL=debug
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend-staging.rule=Host(`staging-api-seminar-hall.localhost`)"
+      - "traefik.http.services.backend-staging.loadbalancer.server.port=5000"
+
+  # Nginx Reverse Proxy for Staging
+  nginx-staging:
+    image: nginx:alpine
+    container_name: seminar-hall-nginx-staging
+    restart: unless-stopped
+    ports:
+      - "8081:80"  # Different port for staging
+    volumes:
+      - ./nginx.staging.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for session management (Staging)
+  redis-staging:
+    image: redis:7-alpine
+    container_name: seminar-hall-redis-staging
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # Different port for staging
+    volumes:
+      - redis_staging_data:/data
+    networks:
+      - staging-network
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-staging-redis-password}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring - Prometheus (Staging)
+  prometheus-staging:
+    image: prom/prometheus:latest
+    container_name: seminar-hall-prometheus-staging
+    restart: unless-stopped
+    ports:
+      - "9091:9090"  # Different port for staging
+    volumes:
+      - ./monitoring/prometheus.staging.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_staging_data:/prometheus
+    networks:
+      - staging-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  # Monitoring - Grafana (Staging)
+  grafana-staging:
+    image: grafana/grafana:latest
+    container_name: seminar-hall-grafana-staging
+    restart: unless-stopped
+    ports:
+      - "3001:3000"  # Different port for staging
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-staging-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    volumes:
+      - grafana_staging_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - staging-network
+    depends_on:
+      - prometheus-staging
+
+  # Log aggregation - Loki (Staging)
+  loki-staging:
+    image: grafana/loki:latest
+    container_name: seminar-hall-loki-staging
+    restart: unless-stopped
+    ports:
+      - "3101:3100"  # Different port for staging
+    volumes:
+      - ./monitoring/loki.staging.yml:/etc/loki/local-config.yaml:ro
+      - loki_staging_data:/loki
+    networks:
+      - staging-network
+    command: -config.file=/etc/loki/local-config.yaml
+
+  # Log collection - Promtail (Staging)
+  promtail-staging:
+    image: grafana/promtail:latest
+    container_name: seminar-hall-promtail-staging
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail.staging.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - staging-network
+    depends_on:
+      - loki-staging
+    command: -config.file=/etc/promtail/config.yml
+
+networks:
+  staging-network:
+    driver: bridge
+    name: seminar-hall-staging-network
+
+volumes:
+  redis_staging_data:
+    name: seminar-hall-redis-staging-data
+  prometheus_staging_data:
+    name: seminar-hall-prometheus-staging-data
+  grafana_staging_data:
+    name: seminar-hall-grafana-staging-data
+  loki_staging_data:
+    name: seminar-hall-loki-staging-data
