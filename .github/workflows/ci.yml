@@ -1,4 +1,4 @@
-name: Enhanced CI/CD Pipeline
+name: Main CI/CD Pipeline
 
 on:
   push:

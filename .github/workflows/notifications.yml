@@ -2,10 +2,10 @@ name: Notification System
 
 on:
   workflow_run:
-    workflows: 
-      - "Enhanced CI/CD Pipeline"
+    workflows:
+      - "Main CI/CD Pipeline"
       - "Basic Monitoring & Health Checks"
-      - "Deploy to Production"
+      - "Production Deployment"
     types:
       - completed
   workflow_dispatch:

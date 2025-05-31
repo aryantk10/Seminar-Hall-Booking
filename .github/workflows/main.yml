@@ -1,8 +1,7 @@
-name: Minimal CI
+name: Legacy CI (Disabled)
 
 on:
-  push:
-    branches: [ main ]
+  # Disabled - use Main CI/CD Pipeline instead
   workflow_dispatch:
 
 jobs:
