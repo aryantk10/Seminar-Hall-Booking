@@ -14,6 +14,9 @@ This project features a **world-class, enterprise-grade CI/CD pipeline** with:
 
 **Pipeline Execution Triggered**: $(date +"%Y-%m-%d %H:%M:%S UTC")
 
+🔒 **Snyk Security Scanning**: Now ACTIVE with API token configured!
+🧪 **Testing Snyk Integration**: Pipeline triggered to verify Snyk scanning works
+
 ## 🚀 Features
 
 - **User Management**: Faculty and Admin role-based authentication
