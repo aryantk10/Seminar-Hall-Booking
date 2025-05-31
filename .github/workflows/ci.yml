@@ -78,6 +78,14 @@ jobs:
       run: npm run lint || echo "ESLint found issues (non-blocking)"
       continue-on-error: true
 
+    - name: Check code formatting (Prettier)
+      run: |
+        echo "Checking frontend code formatting..."
+        npm run format:check || echo "Frontend formatting issues found"
+        echo "Checking backend code formatting..."
+        cd backend && npm run format:check || echo "Backend formatting issues found"
+      continue-on-error: true
+
     - name: TypeScript check
       run: |
         echo "Checking frontend TypeScript..."
@@ -91,10 +99,10 @@ jobs:
         cd backend && npm audit --audit-level=high || echo "Backend audit found issues"
       continue-on-error: true
 
-  # Job 2: Comprehensive Testing
+  # Job 2: Unit Testing
   test:
     runs-on: ubuntu-latest
-    name: Run Tests
+    name: Run Unit Tests
     needs: code-quality
     if: ${{ !inputs.skip_tests }}
     strategy:
@@ -118,19 +126,90 @@ jobs:
         echo "Installing backend dependencies..."
         cd backend && npm ci
 
-    - name: Run frontend tests
-      run: npm test || echo "Frontend tests failed"
+    - name: Run frontend tests with coverage
+      run: npm run test:ci
       continue-on-error: true
 
-    - name: Run backend tests
-      run: cd backend && npm test || echo "Backend tests failed"
+    - name: Run backend tests with coverage
+      run: cd backend && npm run test:ci
       continue-on-error: true
 
-  # Job 3: Build Docker Images (No Push)
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/lcov.info,./backend/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+      continue-on-error: true
+
+  # Job 3: Integration Testing with MongoDB
+  integration-test:
+    runs-on: ubuntu-latest
+    name: Integration Tests
+    needs: code-quality
+    services:
+      mongodb:
+        image: mongo:6.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: testuser
+          MONGO_INITDB_ROOT_PASSWORD: testpass
+          MONGO_INITDB_DATABASE: seminar_hall_test
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd backend && npm ci
+
+    - name: Wait for MongoDB
+      run: |
+        echo "Waiting for MongoDB to be ready..."
+        sleep 10
+
+    - name: Run backend integration tests
+      env:
+        MONGODB_URI: mongodb://testuser:testpass@localhost:27017/seminar_hall_test?authSource=admin
+        JWT_SECRET: test-jwt-secret
+        NODE_ENV: test
+      run: |
+        cd backend
+        npm run test:integration || echo "Integration tests not configured yet"
+      continue-on-error: true
+
+    - name: Run API health check
+      env:
+        MONGODB_URI: mongodb://testuser:testpass@localhost:27017/seminar_hall_test?authSource=admin
+        JWT_SECRET: test-jwt-secret
+        NODE_ENV: test
+      run: |
+        cd backend
+        npm run dev &
+        sleep 10
+        curl -f http://localhost:5000/health || echo "Health check endpoint not available"
+        pkill -f "npm run dev" || true
+      continue-on-error: true
+
+  # Job 4: Build Docker Images (No Push)
   build:
     runs-on: ubuntu-latest
     name: Build Docker Images
-    needs: [code-quality, test]
+    needs: [code-quality, test, integration-test]
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:

@@ -9,6 +9,8 @@
     "test": "jest --coverage --watchAll=false",
     "test:watch": "jest --watch",
     "test:ci": "jest --coverage --watchAll=false --ci",
+    "test:e2e": "cypress run",
+    "test:e2e:open": "cypress open",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "type-check": "tsc --noEmit",
