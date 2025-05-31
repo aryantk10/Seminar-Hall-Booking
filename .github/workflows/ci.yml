@@ -274,11 +274,15 @@ jobs:
         echo "Waiting for backend..."
         curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:5000/health || echo "Backend health check failed"
         echo "Waiting for frontend..."
-        curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:3000 || echo "Frontend health check failed"
+        curl --retry 10 --retry-delay 3 --retry-connrefused http://localhost:9002 || echo "Frontend health check failed"
+
+    - name: Install Cypress
+      run: npm install cypress --save-dev
 
     - name: Run Cypress E2E tests
       uses: cypress-io/github-action@v6
       with:
+        install: false
         start: echo "Servers already running"
         wait-on: 'http://localhost:9002, http://localhost:5000/health'
         wait-on-timeout: 120
@@ -290,17 +294,19 @@ jobs:
 
     - name: Upload Cypress screenshots
       uses: actions/upload-artifact@v4
-      if: failure()
+      if: failure() && hashFiles('cypress/screenshots/**/*') != ''
       with:
         name: cypress-screenshots
         path: cypress/screenshots
+        if-no-files-found: ignore
 
     - name: Upload Cypress videos
       uses: actions/upload-artifact@v4
-      if: always()
+      if: always() && hashFiles('cypress/videos/**/*') != ''
       with:
         name: cypress-videos
         path: cypress/videos
+        if-no-files-found: ignore
 
   # Job 5: Performance Testing
   performance-test:
@@ -360,11 +366,13 @@ jobs:
 
     - name: Upload performance results
       uses: actions/upload-artifact@v4
+      if: hashFiles('performance-report.*') != ''
       with:
         name: performance-reports
         path: |
           performance-report.json
           performance-report.html
+        if-no-files-found: ignore
 
   # Job 6: Advanced Security (SAST)
   advanced-security:
@@ -611,12 +619,12 @@ jobs:
         echo "📱 Monitor progress at: https://dashboard.render.com"
         echo "🎉 Deployment pipeline completed successfully!"
 
-  # Job 9: Deploy to Production
+  # Job 9: Deploy to Production (Manual Trigger)
   deploy-production:
     runs-on: ubuntu-latest
     name: Deploy to Production
     needs: [deploy-staging]
-    if: github.ref == 'refs/heads/main' && inputs.environment == 'production'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
     environment:
       name: production
       url: https://seminar-hall.your-domain.com
@@ -624,8 +632,8 @@ jobs:
     steps:
     - name: Manual approval required
       run: |
-        echo "🔒 Production deployment requires manual approval"
-        echo "This job will wait for manual approval before proceeding"
+        echo "🔒 Production deployment triggered manually"
+        echo "This job requires manual approval before proceeding"
 
     - name: Deploy to production
       run: |
@@ -633,11 +641,32 @@ jobs:
         echo "This would contain production deployment steps"
         echo "✅ Production deployment completed!"
 
-  # Job 10: Comprehensive Notifications
+  # Job 10: Production Deployment Status
+  production-status:
+    runs-on: ubuntu-latest
+    name: Production Deployment Status
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Production deployment info
+      run: |
+        echo "🏭 Production Deployment Status"
+        echo "✅ Staging deployment completed successfully"
+        echo "🔒 Production deployment requires manual trigger"
+        echo "📋 To deploy to production:"
+        echo "   1. Go to Actions tab in GitHub"
+        echo "   2. Select 'CI/CD Pipeline' workflow"
+        echo "   3. Click 'Run workflow'"
+        echo "   4. Select 'production' environment"
+        echo "   5. Click 'Run workflow' button"
+        echo "🌐 Current staging URL: https://seminar-hall-booking.onrender.com"
+
+  # Job 11: Comprehensive Notifications
   notify:
     runs-on: ubuntu-latest
     name: Send Notifications
-    needs: [build, deploy-staging]
+    needs: [build, deploy-staging, production-status]
     if: always()
 
     steps:
