@@ -19,7 +19,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:4000',
   'http://localhost:9002',
-  'https://seminar-hall-booking.onrender.com'
+  'https://seminar-hall-booking.onrender.com',
+  'https://seminar-hall-booking-j69q.onrender.com'
 ];
 
 if (process.env.CORS_ORIGIN) {

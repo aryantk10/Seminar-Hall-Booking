@@ -13,7 +13,7 @@ services:
       - key: PORT
         value: 10000
       - key: NEXT_PUBLIC_API_URL
-        value: https://seminar-hall-booking-backend.onrender.com
+        value: https://seminar-hall-booking-backend.onrender.com/api
 
   # Backend Service
   - type: web
@@ -34,4 +34,4 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://seminar-hall-booking.onrender.com
+        value: https://seminar-hall-booking-j69q.onrender.com
