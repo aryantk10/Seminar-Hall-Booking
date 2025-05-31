@@ -2,26 +2,53 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { auth } from '@/lib/api'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
-    // Simulate login process
-    setTimeout(() => {
-      if (email === 'test@example.com' && password === 'testpassword123') {
+    setError('')
+
+    try {
+      console.log('Attempting login with:', { email, password: '***' })
+      const response = await auth.login({ email, password })
+      console.log('Login response:', response)
+
+      // The response is from axios, so the data is in response.data
+      const userData = response.data
+
+      if (userData.token) {
+        // Store token in localStorage
+        localStorage.setItem('token', userData.token)
+        localStorage.setItem('user', JSON.stringify({
+          _id: userData._id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          department: userData.department
+        }))
+
         alert('Login successful! Redirecting to dashboard...')
         window.location.href = '/dashboard'
       } else {
-        alert('Invalid credentials. Try: test@example.com / testpassword123')
+        setError('Login failed. Please check your credentials.')
       }
+    } catch (error: any) {
+      console.error('Login error:', error)
+      if (error.response?.data?.message) {
+        setError(error.response.data.message)
+      } else {
+        setError('Login failed. Please check your credentials and try again.')
+      }
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -59,6 +86,12 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -138,14 +171,14 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo Credentials</span>
+                <span className="px-2 bg-white text-gray-500">Login Information</span>
               </div>
             </div>
 
             <div className="mt-3 text-center">
               <div className="text-sm text-gray-600">
-                <strong>Email:</strong> test@example.com<br />
-                <strong>Password:</strong> testpassword123
+                Use your registered credentials from the MongoDB database.<br />
+                If you don't have an account, please register first.
               </div>
             </div>
           </div>

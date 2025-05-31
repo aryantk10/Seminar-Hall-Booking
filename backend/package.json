@@ -5,6 +5,7 @@
   "main": "dist/app.js",
   "scripts": {
     "start": "node dist/app.js",
+    "start:simple": "node simple-server.js",
     "start:dev": "node start.js",
     "dev": "nodemon src/app.ts",
     "build": "tsc",
