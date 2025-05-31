@@ -1,27 +1,9 @@
 services:
-  # Frontend Service
-  - type: web
-    name: seminar-hall-frontend
-    env: node
-    region: oregon
-    plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 10000
-      - key: NEXT_PUBLIC_API_URL
-        value: https://seminar-hall-booking-backend.onrender.com
-
-  # Backend Service
   - type: web
     name: seminar-hall-booking-backend
     env: node
     region: oregon
     plan: free
-    rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
