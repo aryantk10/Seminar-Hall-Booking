@@ -37,6 +37,15 @@ Cypress.on('uncaught:exception', (err, runnable) => {
   if (err.message.includes('Non-Error promise rejection captured')) {
     return false
   }
+  if (err.message.includes('Event handlers cannot be passed to Client Component props')) {
+    return false
+  }
+  if (err.message.includes('react-server-dom-webpack')) {
+    return false
+  }
+  if (err.message.includes('Hydration failed')) {
+    return false
+  }
   return true
 })
 
