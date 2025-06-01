@@ -157,9 +157,10 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
       purpose: b.purpose
     })));
 
-    // Now get user-specific bookings
+    // Now get user-specific bookings with proper population
     const bookings = await Booking.find({ user: req.user._id })
       .populate('hall', 'name location')
+      .populate('user', 'name email') // Add user population
       .sort('-createdAt');
 
     console.log('📊 User bookings found:', bookings.length);
