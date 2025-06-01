@@ -107,20 +107,33 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
     try {
       // Validate required fields
       if (!formData.name || !formData.capacity || !formData.location) {
-        throw new Error('Please fill in all required fields');
+        alert('Please fill in all required fields: Hall Name, Capacity, and Location');
+        return;
+      }
+
+      // Validate capacity is a positive number
+      const capacityNum = parseInt(formData.capacity.toString());
+      if (isNaN(capacityNum) || capacityNum <= 0) {
+        alert('Please enter a valid capacity (positive number)');
+        return;
       }
 
       // Prepare submission data
       const submitData = {
         ...formData,
-        capacity: parseInt(formData.capacity.toString()),
-        image: formData.image || '/images/halls/default-hall.jpg'
+        capacity: capacityNum,
+        image: formData.image || '/images/halls/default-hall.jpg',
+        // Ensure we have default values for optional fields
+        description: formData.description || '',
+        block: formData.block || 'Main Building',
+        type: formData.type || 'Seminar Hall'
       };
 
       console.log('📝 Submitting hall form:', submitData);
       await onSubmit(submitData);
     } catch (error: unknown) {
       console.error('❌ Form submission error:', error);
+      alert('Failed to save hall. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

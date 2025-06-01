@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { halls as hallsAPI } from '@/lib/api';
-import { Plus, Edit, Trash2, Users, MapPin, Building } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, MapPin, Building, BarChart3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HallForm } from '@/components/admin/HallForm';
 import { DeleteHallDialog } from '@/components/admin/DeleteHallDialog';
 import Image from 'next/image';
@@ -94,7 +95,7 @@ export default function AdminHallsPage() {
       });
 
       setIsCreateDialogOpen(false);
-      fetchHalls(); // Refresh the list
+      await fetchHalls(); // Refresh the list
     } catch (error: unknown) {
       const apiError = error as ApiError;
       console.error('❌ Error creating hall:', error);
@@ -125,7 +126,7 @@ export default function AdminHallsPage() {
 
       setIsEditDialogOpen(false);
       setSelectedHall(null);
-      fetchHalls(); // Refresh the list
+      await fetchHalls(); // Refresh the list
     } catch (error: unknown) {
       const apiError = error as ApiError;
       console.error('❌ Error updating hall:', error);
@@ -152,7 +153,7 @@ export default function AdminHallsPage() {
 
       setIsDeleteDialogOpen(false);
       setSelectedHall(null);
-      fetchHalls(); // Refresh the list
+      await fetchHalls(); // Refresh the list
     } catch (error: unknown) {
       const apiError = error as ApiError;
       console.error('❌ Error deleting hall:', error);
@@ -188,7 +189,8 @@ export default function AdminHallsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <TooltipProvider>
+      <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">Hall Management</h1>
@@ -216,6 +218,55 @@ export default function AdminHallsPage() {
         </Dialog>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Halls</CardTitle>
+            <Building className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{halls.length}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {halls.reduce((sum, hall) => sum + hall.capacity, 0)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Hall Types</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {new Set(halls.map(hall => hall.type)).size}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Capacity</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {halls.length > 0 ? Math.round(halls.reduce((sum, hall) => sum + hall.capacity, 0) / halls.length) : 0}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {halls.map((hall) => (
           <Card key={hall._id} className="overflow-hidden">
@@ -239,20 +290,35 @@ export default function AdminHallsPage() {
               <CardTitle className="flex items-center justify-between">
                 <span>{hall.name}</span>
                 <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditDialog(hall)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDeleteDialog(hall)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditDialog(hall)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Edit hall details</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDeleteDialog(hall)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Delete hall</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </CardTitle>
               <CardDescription>{hall.description}</CardDescription>
@@ -335,6 +401,7 @@ export default function AdminHallsPage() {
           onConfirm={handleDeleteHall}
         />
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }

@@ -12,6 +12,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { AlertTriangle, Building, Users, MapPin } from 'lucide-react';
 
 interface Hall {
@@ -36,20 +38,34 @@ interface DeleteHallDialogProps {
 
 export function DeleteHallDialog({ hall, open, onOpenChange, onConfirm }: DeleteHallDialogProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmationText, setConfirmationText] = useState('');
 
   const handleConfirm = async () => {
+    if (confirmationText !== hall.name) {
+      alert(`Please type "${hall.name}" to confirm deletion`);
+      return;
+    }
+
     setIsDeleting(true);
     try {
       await onConfirm();
+      setConfirmationText(''); // Reset on success
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setConfirmationText(''); // Reset when dialog closes
+    }
+    onOpenChange(open);
+  };
+
   if (!hall) return null;
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogContent className="max-w-md">
         <AlertDialogHeader>
           <div className="flex items-center gap-2">
@@ -112,9 +128,18 @@ export function DeleteHallDialog({ hall, open, onOpenChange, onConfirm }: Delete
                 </div>
               </div>
 
-              <p className="text-sm text-muted-foreground">
-                Type the hall name to confirm deletion: <strong>{hall.name}</strong>
-              </p>
+              <div className="space-y-2">
+                <Label htmlFor="confirmation">
+                  Type the hall name to confirm deletion: <strong>{hall.name}</strong>
+                </Label>
+                <Input
+                  id="confirmation"
+                  value={confirmationText}
+                  onChange={(e) => setConfirmationText(e.target.value)}
+                  placeholder={hall.name}
+                  className="w-full"
+                />
+              </div>
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -123,7 +148,7 @@ export function DeleteHallDialog({ hall, open, onOpenChange, onConfirm }: Delete
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
-            disabled={isDeleting}
+            disabled={isDeleting || confirmationText !== hall.name}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isDeleting ? (
