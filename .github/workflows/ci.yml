@@ -464,7 +464,6 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        target: production
         push: false
         tags: seminar-hall-frontend:latest
         cache-from: type=gha
@@ -476,7 +475,6 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ./backend
-        target: production
         push: false
         tags: seminar-hall-backend:latest
         cache-from: type=gha
