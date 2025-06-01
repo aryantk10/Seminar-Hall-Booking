@@ -8,7 +8,7 @@ interface AuthRequest extends Request {
 
 export const createHall = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, capacity, location, amenities, description, image, block, type } = req.body;
+    const { name, capacity, location, facilities, description, images } = req.body;
 
     // Validate required fields
     if (!name || !capacity || !location) {
@@ -23,35 +23,23 @@ export const createHall = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
-    // Generate unique ID based on name
-    const id = name.toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .replace(/\s+/g, '-')
-      .substring(0, 20);
-
     const hallData = {
-      id,
       name,
       capacity: parseInt(capacity),
       location,
-      amenities: amenities || [],
+      facilities: facilities || [],
       description: description || '',
-      image: image || `/images/halls/default-hall.jpg`,
-      block: block || 'Main',
-      type: type || 'Seminar Hall'
+      images: images || []
     };
 
     const hall = await Hall.create(hallData);
 
-    console.log(`✅ Hall created: ${name} (ID: ${id}) by ${req.user?.name || 'Admin'}`);
-    res.status(201).json({
-      message: 'Hall created successfully',
-      hall
-    });
+    console.log(`✅ Hall created: ${name} by ${req.user?.name || 'Admin'}`);
+    res.status(201).json(hall);
   } catch (error: any) {
     console.error('❌ Error creating hall:', error);
-    res.status(400).json({
-      message: 'Error creating hall',
+    res.status(500).json({
+      message: 'Server error',
       error: error.message
     });
   }
@@ -81,7 +69,7 @@ export const getHallById = async (req: Request, res: Response): Promise<void> =>
 
 export const updateHall = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, capacity, location, amenities, description, image, block, type } = req.body;
+    const { name, capacity, location, facilities, description, images } = req.body;
     const hallId = req.params.id;
 
     // Check if hall exists
@@ -105,11 +93,9 @@ export const updateHall = async (req: AuthRequest, res: Response): Promise<void>
     if (name) updateData.name = name;
     if (capacity) updateData.capacity = parseInt(capacity);
     if (location) updateData.location = location;
-    if (amenities) updateData.amenities = amenities;
+    if (facilities) updateData.facilities = facilities;
     if (description !== undefined) updateData.description = description;
-    if (image) updateData.image = image;
-    if (block) updateData.block = block;
-    if (type) updateData.type = type;
+    if (images) updateData.images = images;
 
     // Update the hall
     const hall = await Hall.findByIdAndUpdate(hallId, updateData, {

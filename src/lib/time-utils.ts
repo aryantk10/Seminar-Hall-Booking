@@ -82,9 +82,9 @@ export function shouldUseUTCTime(dateInput: string | Date): boolean {
  * This is the recommended function to use for displaying booking times
  */
 export function getBookingTime(dateInput: string | Date): string {
-  // For now, let's use local time extraction since that's what users expect
-  // The backend should be storing times in the user's intended timezone
-  return extractLocalTimeFromDate(dateInput);
+  // Use UTC time extraction since backend stores times in UTC
+  // This preserves the original time the user selected (e.g., 14:00 stays 14:00)
+  return extractTimeFromDate(dateInput);
 }
 
 /**
