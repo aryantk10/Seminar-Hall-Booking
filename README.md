@@ -2,6 +2,11 @@
 
 A comprehensive web application for managing seminar hall bookings with role-based access control, built with Next.js, Node.js, and MongoDB.
 
+## ✨ Latest Features
+- ✅ **Admin Hall Management**: Create, Edit, Delete Halls
+- ✅ **Statistics Dashboard**: Real-time metrics and analytics
+- ✅ **Enhanced UI/UX**: Modern interface with tooltips and confirmations
+
 ## 🚀 **Enterprise CI/CD Pipeline Status**
 
 This project features a **world-class, enterprise-grade CI/CD pipeline** with:
