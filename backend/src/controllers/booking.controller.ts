@@ -33,6 +33,7 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
     const { hallId, startDate, endDate, purpose, attendees, requirements } = req.body;
 
     console.log('🎯 Booking request received:', { hallId, startDate, endDate, purpose });
+    console.log('🔧 DEPLOYMENT TEST - Using Test Hall mapping for all halls');
 
     // TEMPORARY FIX: Map all frontend hall IDs to existing "Test Hall"
     // This allows booking to work while we fix the hall population issue
