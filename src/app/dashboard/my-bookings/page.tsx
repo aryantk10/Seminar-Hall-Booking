@@ -89,6 +89,7 @@ export default function MyBookingsPage() {
           console.log('🌐 API URL being called:', `${process.env.NEXT_PUBLIC_API_URL}/bookings/my`);
           console.log('👤 Current user:', user);
           console.log('🔑 Auth token exists:', !!localStorage.getItem('token'));
+          console.log('🔑 Auth token value:', localStorage.getItem('token')?.substring(0, 20) + '...');
 
           // FORCE SYNC: Get user bookings and manually fetch from API
           console.log('🔍 FORCING SYNC: Fetching user bookings...');

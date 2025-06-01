@@ -25,7 +25,8 @@ router.get('/test', (req, res) => {
 // Setup route (for initial database population) - using GET for easy browser testing
 router.get('/populate', async (req, res) => {
   try {
-    const Hall = require('../models/hall.model').default;
+    // Import Hall model properly
+    const Hall = (await import('../models/hall.model')).default;
 
     console.log('Starting hall population...');
 

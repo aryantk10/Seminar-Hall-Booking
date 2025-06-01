@@ -86,7 +86,7 @@ export default function DashboardPage() {
               <h3 className="text-xl font-semibold">APEX Auditorium</h3>
               <p className="text-muted-foreground mt-1 mb-3">Located in the APEX Block, this state-of-the-art auditorium is perfect for graduation ceremonies, major events, and institutional functions with a capacity of 1000.</p>
               <Button asChild>
-                <Link href="/dashboard/book/apex">Book APEX Auditorium</Link>
+                <Link href="/dashboard/book/apex-auditorium">Book APEX Auditorium</Link>
               </Button>
             </div>
           </CardContent>

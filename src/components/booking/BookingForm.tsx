@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { isBookingConflict } from "@/lib/bookingUtils"; // Import the utility
 import { bookings as bookingsAPI } from "@/lib/api"; // Import API functions
+import Link from "next/link";
 
 const bookingFormSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
@@ -142,12 +143,11 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
       };
 
       // Make API call to create booking
-      console.log('🚀 CREATING BOOKING - API Call Data:', bookingData);
-      console.log('🌐 API URL:', `${process.env.NEXT_PUBLIC_API_URL}/bookings`);
-      console.log('👤 Current user:', user);
+      console.log('🔐 Auth check - User:', user);
+      console.log('🔐 Auth check - Token:', localStorage.getItem('token') ? 'EXISTS' : 'MISSING');
+      console.log('🎯 Booking data:', bookingData);
 
       const response = await bookingsAPI.create(bookingData);
-      console.log('✅ BOOKING CREATED - API Response:', response);
 
       toast({
         title: "Booking Request Submitted Successfully!",
@@ -156,8 +156,9 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
 
       router.push("/dashboard/my-bookings");
     } catch (error: unknown) {
-      const apiError = error as { response?: { data?: { message?: string } } };
+      const apiError = error as { response?: { data?: { message?: string }; status?: number } };
       console.error('Booking creation error:', error);
+
       toast({
         title: "Booking Failed",
         description: apiError.response?.data?.message || "Failed to create booking. Please try again.",
@@ -168,15 +169,21 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
     }
   }
 
+  // Quick auth check
+  if (!user) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground mb-4">You need to be logged in to make a booking.</p>
+        <Button asChild>
+          <Link href="/login/faculty">Login to Continue</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={(e) => {
-        console.log('🔥 FORM SUBMIT EVENT TRIGGERED');
-        console.log('📋 Form state:', form.formState);
-        console.log('❌ Form errors:', form.formState.errors);
-        console.log('✅ Form is valid:', form.formState.isValid);
-        form.handleSubmit(onSubmit)(e);
-      }} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField
             control={form.control}
