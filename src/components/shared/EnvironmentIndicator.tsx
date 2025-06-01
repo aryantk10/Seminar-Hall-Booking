@@ -9,6 +9,7 @@ interface SyncStatus {
   expectedApiUrl: string
   isSync: boolean
   timestamp: string
+  mode?: string
 }
 
 export default function EnvironmentIndicator() {

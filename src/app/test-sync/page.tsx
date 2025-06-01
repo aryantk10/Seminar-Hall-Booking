@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 
 interface BookingData {
@@ -32,7 +32,7 @@ export default function TestSyncPage() {
     setError(null)
     try {
       const response = await api.get('/bookings')
-      setBookings(response.data)
+      setBookings(response.data as BookingData[])
     } catch (err: any) {
       setError(err.response?.data?.message || err.message)
     } finally {
@@ -51,8 +51,8 @@ export default function TestSyncPage() {
     try {
       // Get available halls first
       const hallsResponse = await api.get('/halls')
-      const halls = hallsResponse.data
-      
+      const halls = hallsResponse.data as any[]
+
       if (halls.length === 0) {
         setError('No halls available for booking')
         return
@@ -60,7 +60,7 @@ export default function TestSyncPage() {
 
       // Create a test booking
       const testBookingData = {
-        hall: halls[0]._id,
+        hall: (halls[0] as any)._id,
         startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
         endDate: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(), // Tomorrow + 1 hour
         purpose: `SYNC TEST - ${new Date().toLocaleString()}`,
