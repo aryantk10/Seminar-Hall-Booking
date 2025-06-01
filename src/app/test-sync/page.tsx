@@ -16,7 +16,8 @@ interface BookingData {
 }
 
 export default function TestSyncPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user } = useAuth()
+  const isAuthenticated = !!user // Derive authentication status from user existence
   const [bookings, setBookings] = useState<BookingData[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
