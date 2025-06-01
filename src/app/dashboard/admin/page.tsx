@@ -6,11 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { bookings as bookingsAPI, halls as hallsAPI } from '@/lib/api';
-import { 
-  Clock, 
-  Building, 
-  BarChart3, 
-  Users, 
+import {
+  Clock,
+  Building,
+  BarChart3,
   Calendar,
   CheckCircle,
   XCircle,
@@ -41,23 +40,24 @@ export default function AdminDashboard() {
 
       // Fetch halls
       const hallsResponse = await hallsAPI.getAll();
-      const totalHalls = (hallsResponse.data as any[]).length;
+      const totalHalls = (hallsResponse.data as unknown[]).length;
 
       // Fetch bookings
       const bookingsResponse = await bookingsAPI.getAll();
-      const allBookings = bookingsResponse.data as any[];
+      const allBookings = bookingsResponse.data as unknown[];
 
       // Calculate statistics
       const totalBookings = allBookings.length;
-      const pendingRequests = allBookings.filter((b: any) => b.status === 'pending').length;
-      const approvedBookings = allBookings.filter((b: any) => b.status === 'approved').length;
-      const rejectedBookings = allBookings.filter((b: any) => b.status === 'rejected').length;
+      const pendingRequests = allBookings.filter((b: unknown) => (b as { status: string }).status === 'pending').length;
+      const approvedBookings = allBookings.filter((b: unknown) => (b as { status: string }).status === 'approved').length;
+      const rejectedBookings = allBookings.filter((b: unknown) => (b as { status: string }).status === 'rejected').length;
 
       // Today's bookings
       const today = new Date().toDateString();
-      const todayBookings = allBookings.filter((b: any) => {
-        const bookingDate = new Date(b.startTime).toDateString();
-        return bookingDate === today && b.status === 'approved';
+      const todayBookings = allBookings.filter((b: unknown) => {
+        const booking = b as { startTime: string; status: string };
+        const bookingDate = new Date(booking.startTime).toDateString();
+        return bookingDate === today && booking.status === 'approved';
       }).length;
 
       setStats({
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Events</CardTitle>
+            <CardTitle className="text-sm font-medium">Today&apos;s Events</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>

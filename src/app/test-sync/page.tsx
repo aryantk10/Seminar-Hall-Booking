@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import api from '@/lib/api'
 
@@ -21,9 +21,9 @@ export default function TestSyncPage() {
   const [bookings, setBookings] = useState<BookingData[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [testBooking, setTestBooking] = useState<any>(null)
+  const [testBooking, setTestBooking] = useState<unknown>(null)
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     if (!isAuthenticated) {
       setError('Please login to test sync')
       return
@@ -34,12 +34,13 @@ export default function TestSyncPage() {
     try {
       const response = await api.get('/bookings')
       setBookings(response.data as BookingData[])
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message)
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(error.response?.data?.message || error.message || 'An error occurred')
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAuthenticated])
 
   const createTestBooking = async () => {
     if (!isAuthenticated) {
@@ -52,7 +53,7 @@ export default function TestSyncPage() {
     try {
       // Get available halls first
       const hallsResponse = await api.get('/halls')
-      const halls = hallsResponse.data as any[]
+      const halls = hallsResponse.data as unknown[]
 
       if (halls.length === 0) {
         setError('No halls available for booking')
@@ -61,7 +62,7 @@ export default function TestSyncPage() {
 
       // Create a test booking
       const testBookingData = {
-        hall: (halls[0] as any)._id,
+        hall: (halls[0] as { _id: string })._id,
         startDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
         endDate: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(), // Tomorrow + 1 hour
         purpose: `SYNC TEST - ${new Date().toLocaleString()}`,
@@ -74,8 +75,9 @@ export default function TestSyncPage() {
       
       // Refresh bookings list
       await fetchBookings()
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message)
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(error.response?.data?.message || error.message || 'An error occurred')
     } finally {
       setLoading(false)
     }
@@ -85,7 +87,7 @@ export default function TestSyncPage() {
     if (isAuthenticated) {
       fetchBookings()
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, fetchBookings])
 
   return (
     <div className="container mx-auto p-8">
@@ -192,7 +194,7 @@ export default function TestSyncPage() {
       <div className="p-4 border rounded-lg bg-blue-50">
         <h3 className="font-semibold text-blue-800 mb-2">How to Test Sync:</h3>
         <ol className="list-decimal list-inside text-blue-700 space-y-1">
-          <li>Make sure you're logged in with the same user on both localhost and Vercel</li>
+          <li>Make sure you&apos;re logged in with the same user on both localhost and Vercel</li>
           <li>Create a test booking on this environment</li>
           <li>Go to the other environment (localhost ↔ Vercel)</li>
           <li>Refresh this page or check your bookings</li>
