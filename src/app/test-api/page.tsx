@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { config, checkEnvironmentSync } from '@/lib/config'
 
 interface TestResult {
   status: number | string;
@@ -12,6 +13,11 @@ interface TestResult {
 export default function TestAPIPage() {
   const [results, setResults] = useState<Record<string, TestResult>>({})
   const [loading, setLoading] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<ReturnType<typeof checkEnvironmentSync> | null>(null)
+
+  useEffect(() => {
+    setSyncStatus(checkEnvironmentSync())
+  }, [])
 
   const testEndpoint = async (name: string, url: string) => {
     try {
@@ -83,14 +89,35 @@ export default function TestAPIPage() {
       <h1 className="text-3xl font-bold mb-8">API Connection Test</h1>
       
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Environment Info</h2>
-        <div className="bg-gray-100 p-4 rounded">
-          <p><strong>NEXT_PUBLIC_API_URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'Not set'}</p>
-          <p><strong>NODE_ENV:</strong> {process.env.NODE_ENV || 'Not set'}</p>
-          <p><strong>Fallback URL:</strong> http://localhost:5000/api</p>
-          <p><strong>Current API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}</p>
-          <p><strong>Window Location:</strong> {typeof window !== 'undefined' ? window.location.href : 'Server-side'}</p>
-          <p><strong>Is Production:</strong> {process.env.NODE_ENV === 'production' ? 'Yes' : 'No'}</p>
+        <h2 className="text-xl font-semibold mb-4">Environment Info & Sync Status</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-100 p-4 rounded">
+            <h3 className="font-semibold mb-2">Environment Variables</h3>
+            <p><strong>NEXT_PUBLIC_API_URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'Not set'}</p>
+            <p><strong>NODE_ENV:</strong> {process.env.NODE_ENV || 'Not set'}</p>
+            <p><strong>Current API URL:</strong> {config.apiUrl}</p>
+            <p><strong>Window Location:</strong> {typeof window !== 'undefined' ? window.location.href : 'Server-side'}</p>
+          </div>
+
+          {syncStatus && (
+            <div className={`p-4 rounded border-2 ${
+              syncStatus.isSync
+                ? 'bg-green-50 border-green-300'
+                : 'bg-yellow-50 border-yellow-300'
+            }`}>
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${
+                  syncStatus.isSync ? 'bg-green-500' : 'bg-yellow-500'
+                }`}></span>
+                Sync Status
+              </h3>
+              <p><strong>Environment:</strong> {syncStatus.environment}</p>
+              <p><strong>Configured URL:</strong> {syncStatus.apiUrl}</p>
+              <p><strong>Expected URL:</strong> {syncStatus.expectedApiUrl}</p>
+              <p><strong>Status:</strong> {syncStatus.isSync ? '✅ Synced' : '⚠️ Not Synced'}</p>
+              <p className="text-xs text-gray-600 mt-1">{syncStatus.timestamp}</p>
+            </div>
+          )}
         </div>
       </div>
 

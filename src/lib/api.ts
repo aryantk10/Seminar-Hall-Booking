@@ -1,22 +1,26 @@
 import axios from 'axios';
+import { config, debugConfig, checkEnvironmentSync } from './config';
 
-// PROPER: Environment-based configuration
+// Environment-based configuration with sync checking
 const getApiUrl = (): string => {
-  // Always prefer environment variable
-  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  const syncStatus = checkEnvironmentSync();
 
-  if (envUrl) {
-    console.log('🔗 Using environment API URL:', envUrl);
-    return envUrl;
+  if (config.enableDebug) {
+    console.log('🔗 API Configuration:', {
+      environment: config.environment,
+      configuredUrl: config.apiUrl,
+      syncStatus: syncStatus.isSync ? '✅ Synced' : '⚠️ Not Synced',
+      timestamp: syncStatus.timestamp
+    });
   }
 
-  // Fallback for development
-  const fallbackUrl = 'http://localhost:5000/api';
-  console.log('🔗 No environment variable set, using fallback:', fallbackUrl);
-  return fallbackUrl;
+  return config.apiUrl;
 };
 
 const API_URL = getApiUrl();
+
+// Initialize debug logging
+debugConfig();
 
 const api = axios.create({
   baseURL: API_URL,

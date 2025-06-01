@@ -4,6 +4,7 @@ import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { Providers } from '@/components/Providers';
+import EnvironmentIndicator from '@/components/shared/EnvironmentIndicator';
 
 export const metadata: Metadata = {
   title: 'Hall Hub - Seminar Hall Booking',
@@ -21,6 +22,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster />
+          <EnvironmentIndicator />
         </Providers>
       </body>
     </html>
