@@ -33,7 +33,7 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
     const { hallId, startDate, endDate, purpose, attendees, requirements } = req.body;
 
     // Find hall by name (since frontend sends hall IDs that don't match MongoDB ObjectIds)
-    const hallMapping = {
+    const hallMapping: Record<string, string> = {
       'apex-auditorium': 'APEX Auditorium',
       'esb-hall-1': 'ESB Seminar Hall - I',
       'esb-hall-2': 'ESB Seminar Hall - II',
@@ -44,7 +44,7 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
       'lhc-hall-2': 'LHC Seminar Hall - II'
     };
 
-    const hallName = hallMapping[hallId] || hallId;
+    const hallName = (hallMapping as any)[hallId] || hallId;
     const hall = await Hall.findOne({ name: hallName });
     if (!hall) {
       res.status(404).json({ message: `Hall not found: ${hallName}` });
