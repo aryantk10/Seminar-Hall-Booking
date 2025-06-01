@@ -47,6 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('hallHubUser');
+    localStorage.removeItem('token'); // Also clear the JWT token
     router.push('/'); // Redirect to landing page on logout
   };
 

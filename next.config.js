@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
-    // Ensure API URL is available at build time
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://seminar-hall-booking-backend.onrender.com/api'
+    // PERFECT SYNC: Always use production backend for all environments
+    NEXT_PUBLIC_API_URL: 'https://seminar-hall-booking-backend.onrender.com/api'
   },
   
   // Enable standalone output for better deployment

@@ -710,11 +710,30 @@ jobs:
           STATUS_COLOR="danger"
         fi
 
-        # Slack notification (if configured)
+        # Enhanced Slack notification with detailed pipeline results
         if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          # Get detailed job results
+          CODE_QUALITY="${{ needs.code-quality.result }}"
+          TEST_RESULT="${{ needs.test.result }}"
+          INTEGRATION_TEST="${{ needs.integration-test.result }}"
+          E2E_TEST="${{ needs.e2e-test.result }}"
+          SECURITY_SCAN="${{ needs.advanced-security.result }}"
+          BUILD_RESULT="${{ needs.build.result }}"
+          STAGING_DEPLOY="${{ needs.deploy-staging.result }}"
+
+          # Create detailed results summary
+          RESULTS_SUMMARY="*📊 Detailed Pipeline Results:*\n"
+          RESULTS_SUMMARY+="• Code Quality: $([ "$CODE_QUALITY" = "success" ] && echo "✅" || echo "❌") $CODE_QUALITY\n"
+          RESULTS_SUMMARY+="• Unit Tests: $([ "$TEST_RESULT" = "success" ] && echo "✅" || echo "❌") $TEST_RESULT\n"
+          RESULTS_SUMMARY+="• Integration Tests: $([ "$INTEGRATION_TEST" = "success" ] && echo "✅" || echo "❌") $INTEGRATION_TEST\n"
+          RESULTS_SUMMARY+="• E2E Tests: $([ "$E2E_TEST" = "success" ] && echo "✅" || echo "❌") $E2E_TEST\n"
+          RESULTS_SUMMARY+="• Security Scan: $([ "$SECURITY_SCAN" = "success" ] && echo "✅" || echo "❌") $SECURITY_SCAN\n"
+          RESULTS_SUMMARY+="• Build: $([ "$BUILD_RESULT" = "success" ] && echo "✅" || echo "❌") $BUILD_RESULT\n"
+          RESULTS_SUMMARY+="• Staging Deploy: $([ "$STAGING_DEPLOY" = "success" ] && echo "✅" || echo "❌") $STAGING_DEPLOY"
+
           curl -X POST -H 'Content-type: application/json' \
             --data '{
-              "text": "'$STATUS_EMOJI' *CI/CD Pipeline Complete*",
+              "text": "'$STATUS_EMOJI' *Seminar Hall Booking - CI/CD Pipeline Complete*",
               "attachments": [
                 {
                   "color": "'$STATUS_COLOR'",
@@ -723,7 +742,14 @@ jobs:
                       "type": "header",
                       "text": {
                         "type": "plain_text",
-                        "text": "'$STATUS_EMOJI' CI/CD Pipeline Results"
+                        "text": "'$STATUS_EMOJI' CI/CD Pipeline Complete"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "${{ steps.status.outputs.message }}"
                       }
                     },
                     {
@@ -751,8 +777,17 @@ jobs:
                       "type": "section",
                       "text": {
                         "type": "mrkdwn",
-                        "text": "*Pipeline Results:*\n• Build: ${{ needs.build.result }}\n• Staging: ${{ needs.deploy-staging.result }}"
+                        "text": "'"$RESULTS_SUMMARY"'"
                       }
+                    },
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "🏁 Pipeline completed at: <!date^$(date +%s)^{date_short_pretty} at {time}|$(date)>"
+                        }
+                      ]
                     },
                     {
                       "type": "actions",
@@ -761,17 +796,26 @@ jobs:
                           "type": "button",
                           "text": {
                             "type": "plain_text",
-                            "text": "View Full Pipeline"
+                            "text": "📊 View Full Pipeline"
                           },
-                          "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                          "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                          "style": "primary"
                         },
                         {
                           "type": "button",
                           "text": {
                             "type": "plain_text",
-                            "text": "View Commit"
+                            "text": "📝 View Commit"
                           },
                           "url": "${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+                        },
+                        {
+                          "type": "button",
+                          "text": {
+                            "type": "plain_text",
+                            "text": "🌐 View Staging"
+                          },
+                          "url": "https://seminar-hall-booking.onrender.com"
                         }
                       ]
                     }
@@ -779,9 +823,9 @@ jobs:
                 }
               ]
             }' \
-            ${{ secrets.SLACK_WEBHOOK_URL }} || echo "Slack notification failed"
+            ${{ secrets.SLACK_WEBHOOK_URL }} || echo "❌ Slack notification failed"
         else
-          echo "SLACK_WEBHOOK_URL not configured - skipping Slack notification"
+          echo "⚠️ SLACK_WEBHOOK_URL not configured - skipping Slack notification"
         fi
 
         echo "Status: ${{ steps.status.outputs.status }}"

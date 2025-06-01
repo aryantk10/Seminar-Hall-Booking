@@ -52,7 +52,7 @@ export default function EnvironmentIndicator() {
         )}
         
         <div className="text-xs opacity-75">
-          {syncStatus.isSync ? '✅ Synced with Production Backend' : '⚠️ Configuration Mismatch'}
+          {syncStatus.isSync ? `✅ ${syncStatus.mode || 'Synced'}` : '⚠️ Configuration Mismatch'}
         </div>
       </div>
     </div>

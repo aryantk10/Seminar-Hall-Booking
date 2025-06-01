@@ -1,0 +1,364 @@
+name: Deployment Notifications
+
+on:
+  workflow_run:
+    workflows:
+      - "Main CI/CD Pipeline"
+      - "Production Deployment"
+    types:
+      - completed
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      status:
+        description: 'Deployment status'
+        required: true
+        default: 'success'
+        type: choice
+        options:
+          - success
+          - failure
+          - in_progress
+
+jobs:
+  deployment-notification:
+    runs-on: ubuntu-latest
+    name: Deployment Status Notification
+    
+    steps:
+    - name: Determine deployment details
+      id: deployment
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          # Manual trigger
+          ENV="${{ inputs.environment }}"
+          STATUS="${{ inputs.status }}"
+          TRIGGER="Manual"
+        elif [ "${{ github.event_name }}" == "deployment_status" ]; then
+          # Deployment status event
+          ENV="${{ github.event.deployment.environment }}"
+          STATUS="${{ github.event.deployment_status.state }}"
+          TRIGGER="Automatic"
+        else
+          # Workflow completion
+          if [[ "${{ github.event.workflow_run.name }}" == *"Production"* ]]; then
+            ENV="production"
+          else
+            ENV="staging"
+          fi
+          STATUS="${{ github.event.workflow_run.conclusion }}"
+          TRIGGER="Pipeline"
+        fi
+        
+        # Set environment URLs
+        case $ENV in
+          "production")
+            FRONTEND_URL="https://seminar-hall-booking-psi.vercel.app"
+            BACKEND_URL="https://seminar-hall-booking-backend.onrender.com"
+            ;;
+          "staging")
+            FRONTEND_URL="https://seminar-hall-booking.onrender.com"
+            BACKEND_URL="https://seminar-hall-booking-backend.onrender.com"
+            ;;
+          *)
+            FRONTEND_URL="N/A"
+            BACKEND_URL="N/A"
+            ;;
+        esac
+        
+        # Set status details
+        case $STATUS in
+          "success")
+            STATUS_EMOJI="🚀"
+            STATUS_COLOR="good"
+            STATUS_TEXT="Deployed Successfully"
+            STATUS_MSG="Deployment completed successfully! The application is now live."
+            ;;
+          "failure")
+            STATUS_EMOJI="💥"
+            STATUS_COLOR="danger"
+            STATUS_TEXT="Deployment Failed"
+            STATUS_MSG="Deployment failed! Please check the logs and retry."
+            ;;
+          "in_progress")
+            STATUS_EMOJI="⏳"
+            STATUS_COLOR="warning"
+            STATUS_TEXT="Deployment In Progress"
+            STATUS_MSG="Deployment is currently in progress. Please wait..."
+            ;;
+          *)
+            STATUS_EMOJI="❓"
+            STATUS_COLOR="#808080"
+            STATUS_TEXT="Unknown Status"
+            STATUS_MSG="Deployment status is unknown."
+            ;;
+        esac
+        
+        echo "environment=$ENV" >> $GITHUB_OUTPUT
+        echo "status=$STATUS" >> $GITHUB_OUTPUT
+        echo "trigger=$TRIGGER" >> $GITHUB_OUTPUT
+        echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+        echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+        echo "status_emoji=$STATUS_EMOJI" >> $GITHUB_OUTPUT
+        echo "status_color=$STATUS_COLOR" >> $GITHUB_OUTPUT
+        echo "status_text=$STATUS_TEXT" >> $GITHUB_OUTPUT
+        echo "status_message=$STATUS_MSG" >> $GITHUB_OUTPUT
+
+    - name: Send deployment notification
+      run: |
+        echo "🚀 Sending deployment notification..."
+        
+        # Create environment-specific message
+        ENV_UPPER=$(echo "${{ steps.deployment.outputs.environment }}" | tr '[:lower:]' '[:upper:]')
+        
+        if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "${{ steps.deployment.outputs.status_emoji }} *'"$ENV_UPPER"' Deployment* - ${{ steps.deployment.outputs.status_text }}",
+              "attachments": [
+                {
+                  "color": "${{ steps.deployment.outputs.status_color }}",
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ steps.deployment.outputs.status_emoji }} '"$ENV_UPPER"' Deployment - ${{ steps.deployment.outputs.status_text }}"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "${{ steps.deployment.outputs.status_message }}"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Environment:*\n'"$ENV_UPPER"'"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Status:*\n${{ steps.deployment.outputs.status_text }}"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Trigger:*\n${{ steps.deployment.outputs.trigger }}"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Deployed by:*\n${{ github.actor }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "*🌐 Application URLs:*"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Frontend:*\n<${{ steps.deployment.outputs.frontend_url }}|${{ steps.deployment.outputs.frontend_url }}>"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Backend API:*\n<${{ steps.deployment.outputs.backend_url }}|${{ steps.deployment.outputs.backend_url }}>"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "🕐 Deployment time: <!date^$(date +%s)^{date_short_pretty} at {time}|$(date)>"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "actions",
+                      "elements": [
+                        {
+                          "type": "button",
+                          "text": {
+                            "type": "plain_text",
+                            "text": "🌐 Open Application"
+                          },
+                          "url": "${{ steps.deployment.outputs.frontend_url }}",
+                          "style": "${{ steps.deployment.outputs.status == 'success' && 'primary' || '' }}"
+                        },
+                        {
+                          "type": "button",
+                          "text": {
+                            "type": "plain_text",
+                            "text": "📊 View Pipeline"
+                          },
+                          "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                        },
+                        {
+                          "type": "button",
+                          "text": {
+                            "type": "plain_text",
+                            "text": "📈 Monitor Status"
+                          },
+                          "url": "${{ steps.deployment.outputs.backend_url }}/health"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }} || echo "❌ Slack notification failed"
+        else
+          echo "⚠️ SLACK_WEBHOOK_URL not configured"
+        fi
+
+  health-check-notification:
+    runs-on: ubuntu-latest
+    name: Post-Deployment Health Check
+    needs: deployment-notification
+    if: github.event_name != 'workflow_dispatch' || inputs.status == 'success'
+    
+    steps:
+    - name: Run health checks
+      id: health
+      run: |
+        echo "🔍 Running post-deployment health checks..."
+        
+        # Determine URLs based on environment
+        if [[ "${{ github.event.workflow_run.name }}" == *"Production"* ]] || [[ "${{ inputs.environment }}" == "production" ]]; then
+          FRONTEND_URL="https://seminar-hall-booking-psi.vercel.app"
+          BACKEND_URL="https://seminar-hall-booking-backend.onrender.com"
+          ENV="PRODUCTION"
+        else
+          FRONTEND_URL="https://seminar-hall-booking.onrender.com"
+          BACKEND_URL="https://seminar-hall-booking-backend.onrender.com"
+          ENV="STAGING"
+        fi
+        
+        # Test frontend
+        FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL" || echo "000")
+        
+        # Test backend health endpoint
+        BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health" || echo "000")
+        
+        # Test backend API
+        API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/halls" || echo "000")
+        
+        # Determine overall health
+        if [[ "$FRONTEND_STATUS" == "200" && "$BACKEND_STATUS" == "200" && "$API_STATUS" == "200" ]]; then
+          OVERALL_STATUS="healthy"
+          STATUS_EMOJI="✅"
+          STATUS_COLOR="good"
+          STATUS_MESSAGE="All services are healthy and responding correctly!"
+        elif [[ "$FRONTEND_STATUS" == "200" && "$BACKEND_STATUS" == "200" ]]; then
+          OVERALL_STATUS="partial"
+          STATUS_EMOJI="⚠️"
+          STATUS_COLOR="warning"
+          STATUS_MESSAGE="Core services are healthy, but some API endpoints may have issues."
+        else
+          OVERALL_STATUS="unhealthy"
+          STATUS_EMOJI="❌"
+          STATUS_COLOR="danger"
+          STATUS_MESSAGE="Some services are not responding correctly. Investigation required."
+        fi
+        
+        echo "environment=$ENV" >> $GITHUB_OUTPUT
+        echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+        echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+        echo "frontend_status=$FRONTEND_STATUS" >> $GITHUB_OUTPUT
+        echo "backend_status=$BACKEND_STATUS" >> $GITHUB_OUTPUT
+        echo "api_status=$API_STATUS" >> $GITHUB_OUTPUT
+        echo "overall_status=$OVERALL_STATUS" >> $GITHUB_OUTPUT
+        echo "status_emoji=$STATUS_EMOJI" >> $GITHUB_OUTPUT
+        echo "status_color=$STATUS_COLOR" >> $GITHUB_OUTPUT
+        echo "status_message=$STATUS_MESSAGE" >> $GITHUB_OUTPUT
+
+    - name: Send health check notification
+      run: |
+        echo "🔍 Sending health check notification..."
+        
+        if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": "${{ steps.health.outputs.status_emoji }} *${{ steps.health.outputs.environment }} Health Check* - ${{ steps.health.outputs.overall_status }}",
+              "attachments": [
+                {
+                  "color": "${{ steps.health.outputs.status_color }}",
+                  "blocks": [
+                    {
+                      "type": "header",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "${{ steps.health.outputs.status_emoji }} ${{ steps.health.outputs.environment }} Health Check"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "${{ steps.health.outputs.status_message }}"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "*🔍 Service Status:*"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "fields": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Frontend:*\n${{ steps.health.outputs.frontend_status == '200' && '✅ Healthy' || '❌ Unhealthy' }} (${{ steps.health.outputs.frontend_status }})"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Backend:*\n${{ steps.health.outputs.backend_status == '200' && '✅ Healthy' || '❌ Unhealthy' }} (${{ steps.health.outputs.backend_status }})"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*API:*\n${{ steps.health.outputs.api_status == '200' && '✅ Healthy' || '❌ Unhealthy' }} (${{ steps.health.outputs.api_status }})"
+                        },
+                        {
+                          "type": "mrkdwn",
+                          "text": "*Overall:*\n${{ steps.health.outputs.status_emoji }} ${{ steps.health.outputs.overall_status }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "🔍 Health check completed at: <!date^$(date +%s)^{date_short_pretty} at {time}|$(date)>"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }} || echo "❌ Slack notification failed"
+        else
+          echo "⚠️ SLACK_WEBHOOK_URL not configured"
+        fi

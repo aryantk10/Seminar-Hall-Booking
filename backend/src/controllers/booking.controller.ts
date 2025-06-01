@@ -30,30 +30,70 @@ const checkBookingConflict = async (hallId: string, startTime: Date, endTime: Da
 
 export const createBooking = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { hall: hallId, startTime, endTime } = req.body;
+    const { hallId, startDate, endDate, purpose, attendees, requirements } = req.body;
 
-    // Check if hall exists
-    const hall = await Hall.findById(hallId);
+    // Find hall by name (since frontend sends hall IDs that don't match MongoDB ObjectIds)
+    const hallMapping = {
+      'apex-auditorium': 'APEX Auditorium',
+      'esb-hall-1': 'ESB Seminar Hall - I',
+      'esb-hall-2': 'ESB Seminar Hall - II',
+      'esb-hall-3': 'ESB Seminar Hall - III',
+      'des-hall-1': 'DES Seminar Hall - I',
+      'des-hall-2': 'DES Seminar Hall - II',
+      'lhc-hall-1': 'LHC Seminar Hall - I',
+      'lhc-hall-2': 'LHC Seminar Hall - II'
+    };
+
+    const hallName = hallMapping[hallId] || hallId;
+    const hall = await Hall.findOne({ name: hallName });
     if (!hall) {
-      res.status(404).json({ message: 'Hall not found' });
+      res.status(404).json({ message: `Hall not found: ${hallName}` });
       return;
     }
 
+    // Parse dates and extract time from requirements
+    const startTime = new Date(startDate);
+    const endTime = new Date(endDate);
+
+    // Extract time from requirements if provided
+    if (requirements && typeof requirements === 'string' && requirements.includes('Time:')) {
+      const timeMatch = requirements.match(/Time:\s*(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
+      if (timeMatch) {
+        const [, startTimeStr, endTimeStr] = timeMatch;
+        const [startHour, startMin] = startTimeStr.split(':').map(Number);
+        const [endHour, endMin] = endTimeStr.split(':').map(Number);
+
+        startTime.setHours(startHour, startMin, 0, 0);
+        endTime.setHours(endHour, endMin, 0, 0);
+      }
+    }
+
     // Check for conflicts
-    const conflict = await checkBookingConflict(hallId, new Date(startTime), new Date(endTime));
+    const conflict = await checkBookingConflict(hall._id.toString(), startTime, endTime);
     if (conflict) {
       res.status(400).json({ message: 'Hall is already booked for this time slot' });
       return;
     }
 
     const booking = await Booking.create({
-      ...req.body,
+      hall: hall._id,
       user: req.user._id,
+      startTime,
+      endTime,
+      purpose,
+      attendees: attendees || 1,
+      requirements: requirements ? [requirements] : [],
       status: 'pending',
     });
 
-    res.status(201).json(booking);
+    // Populate the response
+    const populatedBooking = await Booking.findById(booking._id)
+      .populate('hall', 'name location')
+      .populate('user', 'name email');
+
+    res.status(201).json(populatedBooking);
   } catch (error) {
+    console.error('Booking creation error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -73,6 +113,19 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const bookings = await Booking.find({ user: req.user._id })
       .populate('hall', 'name location')
+      .sort('-createdAt');
+    res.json(bookings);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get approved bookings for calendar view (public access for all authenticated users)
+export const getApprovedBookings = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const bookings = await Booking.find({ status: 'approved' })
+      .populate('hall', 'name location')
+      .populate('user', 'name')
       .sort('-createdAt');
     res.json(bookings);
   } catch (error) {
@@ -138,11 +191,19 @@ export const updateBooking = async (req: AuthRequest, res: Response): Promise<vo
 
 export const deleteBooking = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const booking = await Booking.findByIdAndDelete(req.params.id);
+    const booking = await Booking.findById(req.params.id);
     if (!booking) {
       res.status(404).json({ message: 'Booking not found' });
       return;
     }
+
+    // Check if the user is the owner of the booking or an admin
+    if (booking.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      res.status(403).json({ message: 'Not authorized to delete this booking' });
+      return;
+    }
+
+    await Booking.findByIdAndDelete(req.params.id);
     res.json({ message: 'Booking deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

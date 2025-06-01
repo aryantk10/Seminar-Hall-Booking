@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Clock, XCircle, TrendingUp, Building } from "lucide-react";
+import { bookings as bookingsAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";
 
@@ -32,40 +34,78 @@ const STATUS_COLORS_FOR_CHART = {
 export default function AdminReportsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentAllHallsData, setCurrentAllHallsData] = useState<Hall[]>(defaultAllHallsData);
 
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.push("/dashboard");
-      return;
-    }
+    const fetchReportsData = async () => {
+      if (!authLoading && (!user || user.role !== 'admin')) {
+        router.push("/dashboard");
+        return;
+      }
 
-    // Load configured halls
-    const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
-    if (storedHallsString) {
-      try {
-        setCurrentAllHallsData(JSON.parse(storedHallsString));
-      } catch (error) {
-        console.error("Failed to parse configured halls for reports", error);
-        // If parsing fails, reset to default and save it.
+      // Load configured halls (keep localStorage for hall configuration)
+      const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
+      if (storedHallsString) {
+        try {
+          setCurrentAllHallsData(JSON.parse(storedHallsString));
+        } catch (error) {
+          console.error("Failed to parse configured halls for reports", error);
+          localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHallsData));
+          setCurrentAllHallsData(defaultAllHallsData);
+        }
+      } else {
         localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHallsData));
         setCurrentAllHallsData(defaultAllHallsData);
       }
-    } else {
-      // If not in localStorage, save the default.
-      localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHallsData));
-      setCurrentAllHallsData(defaultAllHallsData);
-    }
 
-    if (user && user.role === 'admin') {
-      const allStoredBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
-      setBookings(allStoredBookings.map(b => ({ ...b, date: new Date(b.date) })));
-    }
-    setLoading(false);
-  }, [user, authLoading, router]);
+      // Fetch bookings from API instead of localStorage
+      if (user && user.role === 'admin') {
+        try {
+          // Clear old localStorage data
+          localStorage.removeItem("hallHubBookings");
+
+          const response = await bookingsAPI.getAll();
+          const apiBookings = response.data.map((booking: any) => ({
+            id: booking._id,
+            hallId: booking.hall?._id || booking.hallId,
+            hallName: booking.hall?.name || 'Unknown Hall',
+            userId: booking.user?._id || booking.userId,
+            userName: booking.user?.name || 'Unknown User',
+            date: new Date(booking.startTime || booking.date),
+            startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            endTime: new Date(booking.endTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            purpose: booking.purpose,
+            status: booking.status,
+            requestedAt: new Date(booking.createdAt || booking.requestedAt),
+          }));
+
+          setBookings(apiBookings);
+        } catch (error) {
+          console.error('Failed to fetch bookings for reports:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load booking data for reports. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchReportsData();
+  }, [user, authLoading, router, toast]);
 
   const reportStats = useMemo(() => {
     const totalBookings = bookings.length;

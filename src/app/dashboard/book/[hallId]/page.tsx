@@ -12,6 +12,7 @@ import { useEffect, useState, use } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { bookings as bookingsAPI } from "@/lib/api";
 
 interface PageRouteParams {
   hallId: string;
@@ -33,25 +34,74 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
 
 
   useEffect(() => {
-    let currentHalls: Hall[];
-    const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
-    if (storedHallsString) {
-      currentHalls = JSON.parse(storedHallsString) as Hall[];
-    } else {
-      currentHalls = defaultAllHalls;
-      localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHalls));
-    }
-    setConfiguredHallsData(currentHalls);
+    const fetchHallAndBookings = async () => {
+      // Load configured halls (keep localStorage for hall configuration)
+      let currentHalls: Hall[];
+      const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
+      if (storedHallsString) {
+        currentHalls = JSON.parse(storedHallsString) as Hall[];
+      } else {
+        currentHalls = defaultAllHalls;
+        localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHalls));
+      }
+      setConfiguredHallsData(currentHalls);
 
-    const foundHall = currentHalls.find((h) => h.id === hallId); 
-    if (foundHall) {
-      setHall(foundHall);
-    }
-    
-    const storedBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
-    setBookings(storedBookings.map(b => ({...b, date: new Date(b.date)})));
-    setLoading(false);
-  }, [hallId]); 
+      const foundHall = currentHalls.find((h) => h.id === hallId);
+      if (foundHall) {
+        setHall(foundHall);
+      }
+
+      // Try to fetch approved bookings for conflict checking, fallback to user bookings
+      try {
+        let response;
+        try {
+          console.log('🚀 Trying to fetch approved bookings for conflict checking...');
+          response = await bookingsAPI.getApproved();
+          console.log('✅ Successfully fetched approved bookings:', response.data?.length || 0);
+        } catch (error: any) {
+          console.log('❌ Approved bookings endpoint failed:', error.response?.status);
+          console.log('🔄 Falling back to user bookings for conflict checking...');
+          response = await bookingsAPI.getMyBookings();
+          console.log('✅ Successfully fetched user bookings:', response.data?.length || 0);
+        }
+
+        const apiBookings = response.data.map((booking: any) => ({
+          id: booking._id,
+          hallId: booking.hall?._id || booking.hallId,
+          hallName: booking.hall?.name || 'Unknown Hall',
+          userId: booking.user?._id || booking.userId,
+          userName: booking.user?.name || 'Unknown User',
+          date: new Date(booking.startTime || booking.date),
+          startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }),
+          endTime: new Date(booking.endTime).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }),
+          purpose: booking.purpose,
+          status: booking.status,
+          requestedAt: new Date(booking.createdAt || booking.requestedAt),
+        }));
+
+        setBookings(apiBookings);
+      } catch (error) {
+        console.error('Failed to fetch bookings for hall:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load existing bookings. Please try again.",
+          variant: "destructive",
+        });
+      }
+
+      setLoading(false);
+    };
+
+    fetchHallAndBookings();
+  }, [hallId, toast]);
 
   const handleAmenityToggle = (amenityName: string) => {
     if (!user || user.role !== 'admin' || !hall) return;

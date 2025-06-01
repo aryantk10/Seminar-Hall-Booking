@@ -14,9 +14,11 @@ export default function TestAPIPage() {
   const [results, setResults] = useState<Record<string, TestResult>>({})
   const [loading, setLoading] = useState(false)
   const [syncStatus, setSyncStatus] = useState<ReturnType<typeof checkEnvironmentSync> | null>(null)
+  const [windowLocation, setWindowLocation] = useState<string>('')
 
   useEffect(() => {
     setSyncStatus(checkEnvironmentSync())
+    setWindowLocation(window.location.href)
   }, [])
 
   const testEndpoint = async (name: string, url: string) => {
@@ -96,7 +98,7 @@ export default function TestAPIPage() {
             <p><strong>NEXT_PUBLIC_API_URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'Not set'}</p>
             <p><strong>NODE_ENV:</strong> {process.env.NODE_ENV || 'Not set'}</p>
             <p><strong>Current API URL:</strong> {config.apiUrl}</p>
-            <p><strong>Window Location:</strong> {typeof window !== 'undefined' ? window.location.href : 'Server-side'}</p>
+            <p><strong>Window Location:</strong> {windowLocation || 'Loading...'}</p>
           </div>
 
           {syncStatus && (

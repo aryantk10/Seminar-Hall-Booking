@@ -116,9 +116,10 @@ interface BookingData {
 
 export const bookings = {
   create: (data: BookingData) => api.post('/bookings', data),
-  getAll: () => api.get('/bookings'),
+  getAll: () => api.get('/bookings'), // Admin only
+  getApproved: () => api.get('/bookings/approved'), // Public calendar data
   getById: (id: string) => api.get(`/bookings/${id}`),
-  getMyBookings: () => api.get('/bookings/my-bookings'),
+  getMyBookings: () => api.get('/bookings/my'), // Fixed endpoint to match backend route
   update: (id: string, data: Partial<BookingData>) => api.put(`/bookings/${id}`, data),
   delete: (id: string) => api.delete(`/bookings/${id}`),
   approve: (id: string) => api.put(`/bookings/${id}/approve`),

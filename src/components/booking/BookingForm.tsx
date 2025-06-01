@@ -29,6 +29,7 @@ import { timeSlots } from "@/lib/data";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { isBookingConflict } from "@/lib/bookingUtils"; // Import the utility
+import { bookings as bookingsAPI } from "@/lib/api"; // Import API functions
 
 const bookingFormSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
@@ -97,14 +98,27 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
     });
   };
 
-  function onSubmit(values: z.infer<typeof bookingFormSchema>) {
+  async function onSubmit(values: z.infer<typeof bookingFormSchema>) {
+    console.log('🎯 FORM SUBMITTED - Starting booking process...');
+    console.log('📝 Form values:', values);
+    console.log('👤 User check:', !!user);
+    console.log('🏢 Hall check:', !!hall);
+
     if (!user) {
+      console.log('❌ VALIDATION FAILED - User not logged in');
       toast({ title: "Error", description: "You must be logged in to book.", variant: "destructive" });
       return;
     }
+
+    console.log('✅ USER VALIDATION PASSED');
     setIsLoading(true);
 
-    if (isSlotBooked(values.date, values.startTime, values.endTime)) {
+    console.log('🔍 CHECKING SLOT CONFLICTS...');
+    const hasConflict = isSlotBooked(values.date, values.startTime, values.endTime);
+    console.log('⚡ Conflict check result:', hasConflict);
+
+    if (hasConflict) {
+      console.log('❌ BOOKING CONFLICT DETECTED');
       toast({
         title: "Booking Conflict",
         description: "The selected time slot is already booked or overlaps with an existing approved booking. Please choose another time.",
@@ -114,36 +128,54 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
       return;
     }
 
-    setTimeout(() => {
-      const newBooking: Booking = {
-        id: `booking-${Math.random().toString(36).substring(7)}`,
+    console.log('✅ NO CONFLICTS - Proceeding to API call...');
+
+    try {
+      // Create booking data for API
+      const bookingData = {
         hallId: hall.id,
-        hallName: hall.name,
-        userId: user.id,
-        userName: user.name,
-        date: values.date,
-        startTime: values.startTime,
-        endTime: values.endTime,
+        startDate: values.date.toISOString(),
+        endDate: values.date.toISOString(), // Same day
         purpose: values.purpose,
-        status: "pending",
-        requestedAt: new Date(),
+        attendees: 1, // Default value
+        requirements: `Time: ${values.startTime} - ${values.endTime}`,
       };
 
-      const currentBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
-      localStorage.setItem("hallHubBookings", JSON.stringify([...currentBookings, newBooking]));
-      
+      // Make API call to create booking
+      console.log('🚀 CREATING BOOKING - API Call Data:', bookingData);
+      console.log('🌐 API URL:', `${process.env.NEXT_PUBLIC_API_URL}/bookings`);
+      console.log('👤 Current user:', user);
+
+      const response = await bookingsAPI.create(bookingData);
+      console.log('✅ BOOKING CREATED - API Response:', response);
+
       toast({
-        title: "Booking Request Submitted",
-        description: `Your request for ${hall.name} on ${format(values.date, "PPP")} from ${values.startTime} to ${values.endTime} has been submitted for approval.`,
+        title: "Booking Request Submitted Successfully!",
+        description: `Your request for ${hall.name} on ${format(values.date, "PPP")} from ${values.startTime} to ${values.endTime} has been submitted to the production database.`,
       });
-      router.push("/dashboard/my-bookings"); 
+
+      router.push("/dashboard/my-bookings");
+    } catch (error: any) {
+      console.error('Booking creation error:', error);
+      toast({
+        title: "Booking Failed",
+        description: error.response?.data?.message || "Failed to create booking. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={(e) => {
+        console.log('🔥 FORM SUBMIT EVENT TRIGGERED');
+        console.log('📋 Form state:', form.formState);
+        console.log('❌ Form errors:', form.formState.errors);
+        console.log('✅ Form is valid:', form.formState.isValid);
+        form.handleSubmit(onSubmit)(e);
+      }} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField
             control={form.control}
@@ -255,7 +287,17 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
             </FormItem>
           )}
         />
-        <Button type="submit" size="lg" className="w-full md:w-auto" disabled={isLoading}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full md:w-auto"
+          disabled={isLoading}
+          onClick={() => {
+            console.log('🖱️ SUBMIT BUTTON CLICKED');
+            console.log('🔒 Button disabled:', isLoading);
+            console.log('📝 Current form values:', form.getValues());
+          }}
+        >
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Submit Booking Request
         </Button>

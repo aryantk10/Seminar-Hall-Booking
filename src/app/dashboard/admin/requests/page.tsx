@@ -10,57 +10,116 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Clock, XCircle, HelpCircle, Trash2, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { bookings as bookingsAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminRequestsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'admin')) {
-      router.push("/dashboard"); // Redirect if not admin
-      return;
-    }
-    if (user && user.role === 'admin') {
-      const allBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
-      // Check for any new cancellations by faculty
-      const storedNotifications = JSON.parse(localStorage.getItem("adminNotifications") || "[]") as string[];
-      setNotifications(storedNotifications);
-      
-      setBookings(
-        allBookings
-        .map(b => ({ ...b, date: new Date(b.date) })) // Ensure date is Date object
-        .sort((a, b) => {
-          if (a.status === 'pending' && b.status !== 'pending') return -1;
-          if (a.status !== 'pending' && b.status === 'pending') return 1;
-          return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
-        })
-      );
-    }
-    setLoading(false);
-  }, [user, authLoading, router]);
-
-  const updateBookingStatus = (bookingId: string, newStatus: 'approved' | 'rejected' | 'cancelled') => {
-    const updatedBookings = bookings.map(b => 
-      b.id === bookingId ? { ...b, status: newStatus } : b
-    );
-    setBookings(updatedBookings);
-    localStorage.setItem("hallHubBookings", JSON.stringify(updatedBookings));
-
-    // If admin cancels a booking, notify the faculty
-    if (newStatus === 'cancelled') {
-      const booking = bookings.find(b => b.id === bookingId);
-      if (booking) {
-        const facultyNotification = {
-          userId: booking.userId,
-          message: `Your booking for ${booking.hallName} on ${format(new Date(booking.date), "PPP")} has been cancelled by admin.`,
-          timestamp: new Date(),
-        };
-        const userNotifications = JSON.parse(localStorage.getItem("userNotifications") || "[]");
-        localStorage.setItem("userNotifications", JSON.stringify([...userNotifications, facultyNotification]));
+    const fetchAllBookings = async () => {
+      if (!authLoading && (!user || user.role !== 'admin')) {
+        router.push("/dashboard"); // Redirect if not admin
+        return;
       }
+
+      if (user && user.role === 'admin') {
+        try {
+          // Fetch all bookings from API instead of localStorage
+          const response = await bookingsAPI.getAll();
+          const apiBookings = response.data.map((booking: any) => ({
+            id: booking._id,
+            hallId: booking.hall?._id || booking.hallId,
+            hallName: booking.hall?.name || 'Unknown Hall',
+            userId: booking.user?._id || booking.userId,
+            userName: booking.user?.name || 'Unknown User',
+            date: new Date(booking.startTime || booking.date),
+            startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            endTime: new Date(booking.endTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            purpose: booking.purpose,
+            status: booking.status,
+            requestedAt: new Date(booking.createdAt || booking.requestedAt),
+          }));
+
+          setBookings(apiBookings.sort((a, b) => {
+            if (a.status === 'pending' && b.status !== 'pending') return -1;
+            if (a.status !== 'pending' && b.status === 'pending') return 1;
+            return new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime();
+          }));
+
+          // For now, keep notifications from localStorage (can be migrated later)
+          const storedNotifications = JSON.parse(localStorage.getItem("adminNotifications") || "[]") as string[];
+          setNotifications(storedNotifications);
+        } catch (error) {
+          console.error('Failed to fetch bookings:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load booking requests. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchAllBookings();
+  }, [user, authLoading, router, toast]);
+
+  const updateBookingStatus = async (bookingId: string, newStatus: 'approved' | 'rejected' | 'cancelled') => {
+    try {
+      // Make API call to update booking status
+      if (newStatus === 'approved') {
+        await bookingsAPI.approve(bookingId);
+      } else if (newStatus === 'rejected') {
+        await bookingsAPI.reject(bookingId);
+      } else if (newStatus === 'cancelled') {
+        await bookingsAPI.delete(bookingId);
+      }
+
+      // Update local state
+      const updatedBookings = bookings.map(b =>
+        b.id === bookingId ? { ...b, status: newStatus } : b
+      );
+      setBookings(updatedBookings);
+
+      // If admin cancels a booking, notify the faculty (keep localStorage for now)
+      if (newStatus === 'cancelled') {
+        const booking = bookings.find(b => b.id === bookingId);
+        if (booking) {
+          const facultyNotification = {
+            userId: booking.userId,
+            message: `Your booking for ${booking.hallName} on ${format(new Date(booking.date), "PPP")} has been cancelled by admin.`,
+            timestamp: new Date(),
+          };
+          const userNotifications = JSON.parse(localStorage.getItem("userNotifications") || "[]");
+          localStorage.setItem("userNotifications", JSON.stringify([...userNotifications, facultyNotification]));
+        }
+      }
+
+      toast({
+        title: "Booking Updated",
+        description: `Booking has been ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error('Failed to update booking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update booking status. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

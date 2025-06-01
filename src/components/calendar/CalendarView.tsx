@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, HelpCircle, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select as ShadcnSelect, SelectContent as ShadcnSelectContent, SelectItem as ShadcnSelectItem, SelectTrigger as ShadcnSelectTrigger, SelectValue as ShadcnSelectValue } from "@/components/ui/select";
+import { bookings as bookingsAPI } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";
 
@@ -26,30 +28,90 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedHallId, setSelectedHallId] = useState<string | "all">("all");
   const [allHalls, setAllHalls] = useState<Hall[]>(defaultHallsData);
+  const { toast } = useToast();
 
   const initialBookingsDependency = useMemo(() => JSON.stringify(initialBookings), [initialBookings]);
 
   useEffect(() => {
-    const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
-    if (storedHallsString) {
-      try {
-        setAllHalls(JSON.parse(storedHallsString));
-      } catch (error) {
-        console.error("Failed to parse configured halls from localStorage for CalendarView", error);
+    const fetchBookingsAndHalls = async () => {
+      // Load configured halls (keep localStorage for hall configuration)
+      const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
+      if (storedHallsString) {
+        try {
+          setAllHalls(JSON.parse(storedHallsString));
+        } catch (error) {
+          console.error("Failed to parse configured halls from localStorage for CalendarView", error);
+          localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultHallsData));
+          setAllHalls(defaultHallsData);
+        }
+      } else {
         localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultHallsData));
         setAllHalls(defaultHallsData);
       }
-    } else {
-      localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultHallsData));
-      setAllHalls(defaultHallsData);
-    }
 
-    const currentInitialBookings = JSON.parse(initialBookingsDependency) as Booking[];
-    const storedBookings = JSON.parse(localStorage.getItem("hallHubBookings") || "[]") as Booking[];
-    const dataToProcess = currentInitialBookings.length > 0 ? currentInitialBookings : storedBookings;
-    
-    setBookings(dataToProcess.map(b => ({ ...b, date: new Date(b.date) })));
-  }, [initialBookingsDependency]); 
+      // Fetch bookings from API instead of localStorage
+      try {
+        const currentInitialBookings = JSON.parse(initialBookingsDependency) as Booking[];
+
+        if (currentInitialBookings.length > 0) {
+          // Use provided initial bookings
+          setBookings(currentInitialBookings.map(b => ({ ...b, date: new Date(b.date) })));
+        } else {
+          // Try to fetch approved bookings, fallback to user's own bookings if endpoint doesn't exist
+          let response;
+          try {
+            console.log('🚀 Trying to fetch approved bookings...');
+            response = await bookingsAPI.getApproved();
+            console.log('✅ Successfully fetched approved bookings:', response.data?.length || 0);
+          } catch (error: any) {
+            console.log('❌ Approved bookings endpoint failed:', error.response?.status);
+            console.log('🔄 Falling back to user bookings...');
+            try {
+              response = await bookingsAPI.getMyBookings();
+              console.log('✅ Successfully fetched user bookings:', response.data?.length || 0);
+            } catch (fallbackError) {
+              console.error('❌ Both endpoints failed:', fallbackError);
+              setBookings([]);
+              return;
+            }
+          }
+
+          const apiBookings = response.data.map((booking: any) => ({
+            id: booking._id,
+            hallId: booking.hall?._id || booking.hallId,
+            hallName: booking.hall?.name || 'Unknown Hall',
+            userId: booking.user?._id || booking.userId,
+            userName: booking.user?.name || 'Unknown User',
+            date: new Date(booking.startTime || booking.date),
+            startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            endTime: new Date(booking.endTime).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            }),
+            purpose: booking.purpose,
+            status: booking.status,
+            requestedAt: new Date(booking.createdAt || booking.requestedAt),
+          }));
+
+          setBookings(apiBookings);
+        }
+      } catch (error) {
+        console.error('Failed to fetch bookings for calendar:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load bookings for calendar. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchBookingsAndHalls();
+  }, [initialBookingsDependency, toast]);
 
   const bookingsForSelectedDate = useMemo(() => {
     if (!date) return [];
