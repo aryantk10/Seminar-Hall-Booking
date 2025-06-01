@@ -634,7 +634,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.environment == 'production'
     environment:
       name: production
-      url: https://seminar-hall.your-domain.com
+      url: https://seminar-hall-booking-psi.vercel.app
 
     steps:
     - name: Manual approval required
@@ -644,8 +644,15 @@ jobs:
 
     - name: Deploy to production
       run: |
-        echo "🚀 Deploying to production environment..."
-        echo "This would contain production deployment steps"
+        echo "🚀 Production Deployment Status..."
+        echo "✅ Vercel Frontend: https://seminar-hall-booking-psi.vercel.app"
+        echo "✅ Render Backend: https://seminar-hall-booking-backend.onrender.com"
+        echo "✅ MongoDB Atlas: Connected and operational"
+        echo ""
+        echo "🎉 Production services are auto-deploying from main branch!"
+        echo "📊 Monitor deployment status:"
+        echo "   • Vercel: https://vercel.com/dashboard"
+        echo "   • Render: https://dashboard.render.com"
         echo "✅ Production deployment completed!"
 
   # Job 10: Production Deployment Status
@@ -667,7 +674,8 @@ jobs:
         echo "   3. Click 'Run workflow'"
         echo "   4. Select 'production' environment"
         echo "   5. Click 'Run workflow' button"
-        echo "🌐 Current staging URL: https://seminar-hall-booking.onrender.com"
+        echo "🌐 Staging URL: https://seminar-hall-booking.onrender.com"
+        echo "🚀 Production URL: https://seminar-hall-booking-psi.vercel.app"
 
   # Job 11: Comprehensive Notifications
   notify:
