@@ -114,7 +114,7 @@ export default function LandingPage() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-foreground">
-                    Welcome to Hall Hub
+                    Welcome to Hall Hub v2.0
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
                     Book from 1 auditorium and 7 seminar halls across APEX, ESB, DES, and LHC blocks.
