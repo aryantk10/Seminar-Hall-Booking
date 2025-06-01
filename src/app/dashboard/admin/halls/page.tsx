@@ -42,8 +42,9 @@ export default function AdminHallsPage() {
       setLoading(true);
       console.log('🏢 Fetching halls for admin management...');
       const response = await hallsAPI.getAll();
-      setHalls(response.data);
-      console.log(`✅ Loaded ${response.data.length} halls`);
+      const hallsData = response.data as Hall[];
+      setHalls(hallsData);
+      console.log(`✅ Loaded ${hallsData.length} halls`);
     } catch (error: any) {
       console.error('❌ Error fetching halls:', error);
       toast({

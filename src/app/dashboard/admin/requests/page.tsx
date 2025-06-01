@@ -32,7 +32,7 @@ export default function AdminRequestsPage() {
         try {
           // Fetch all bookings from API instead of localStorage
           const response = await bookingsAPI.getAll();
-          const apiBookings = response.data.map((booking: any) => ({
+          const apiBookings = (response.data as any[]).map((booking: any) => ({
             id: booking._id,
             hallId: booking.hall?._id || booking.hallId,
             hallName: booking.hall?.name || 'Unknown Hall',

@@ -41,21 +41,21 @@ export default function AdminDashboard() {
 
       // Fetch halls
       const hallsResponse = await hallsAPI.getAll();
-      const totalHalls = hallsResponse.data.length;
+      const totalHalls = (hallsResponse.data as any[]).length;
 
       // Fetch bookings
       const bookingsResponse = await bookingsAPI.getAll();
-      const allBookings = bookingsResponse.data;
+      const allBookings = bookingsResponse.data as any[];
 
       // Calculate statistics
       const totalBookings = allBookings.length;
-      const pendingRequests = allBookings.filter(b => b.status === 'pending').length;
-      const approvedBookings = allBookings.filter(b => b.status === 'approved').length;
-      const rejectedBookings = allBookings.filter(b => b.status === 'rejected').length;
+      const pendingRequests = allBookings.filter((b: any) => b.status === 'pending').length;
+      const approvedBookings = allBookings.filter((b: any) => b.status === 'approved').length;
+      const rejectedBookings = allBookings.filter((b: any) => b.status === 'rejected').length;
 
       // Today's bookings
       const today = new Date().toDateString();
-      const todayBookings = allBookings.filter(b => {
+      const todayBookings = allBookings.filter((b: any) => {
         const bookingDate = new Date(b.startTime).toDateString();
         return bookingDate === today && b.status === 'approved';
       }).length;
