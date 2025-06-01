@@ -20,7 +20,7 @@ export const config = {
   urls: {
     development: {
       frontend: 'http://localhost:9002',
-      backend: 'http://localhost:5000/api'
+      backend: 'https://seminar-hall-booking-backend.onrender.com/api'  // Use production backend for sync
     },
     production: {
       frontend: 'https://seminar-hall-booking-psi.vercel.app',
