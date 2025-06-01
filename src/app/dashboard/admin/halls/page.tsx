@@ -203,9 +203,33 @@ export default function AdminHallsPage() {
     );
   }
 
-  // Redirect if not admin (this should not render due to useEffect redirect)
+  // DEBUG: Show user info if not admin
   if (!user || user.role !== 'admin') {
-    return null;
+    return (
+      <div className="container mx-auto py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h2 className="text-xl font-bold text-red-800 mb-4">🚨 Admin Access Required</h2>
+          <div className="space-y-2 text-sm">
+            <p><strong>User Status:</strong> {user ? 'Logged In' : 'Not Logged In'}</p>
+            {user && (
+              <>
+                <p><strong>Name:</strong> {user.name}</p>
+                <p><strong>Email:</strong> {user.email}</p>
+                <p><strong>Current Role:</strong> <span className="bg-red-100 px-2 py-1 rounded">{user.role}</span></p>
+                <p><strong>Required Role:</strong> <span className="bg-green-100 px-2 py-1 rounded">admin</span></p>
+              </>
+            )}
+          </div>
+          <div className="mt-4 p-4 bg-blue-50 rounded">
+            <p className="font-medium text-blue-800">Solutions:</p>
+            <ul className="list-disc list-inside text-blue-700 mt-2 space-y-1">
+              <li>Login with admin account: admin@test.com / password123</li>
+              <li>Or update your user role to admin in database</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
