@@ -16,7 +16,7 @@ export default function TestDeploymentPage() {
     try {
       // This will fail if the components aren't properly built
       results.push('✅ Admin components are available in build');
-    } catch (error) {
+    } catch {
       results.push('❌ Admin components missing from build');
     }
 
@@ -29,7 +29,7 @@ export default function TestDeploymentPage() {
     // Test 4: Check if we can import admin components
     try {
       results.push('✅ Component imports working');
-    } catch (error) {
+    } catch {
       results.push('❌ Component import failed');
     }
 
@@ -99,7 +99,7 @@ export default function TestDeploymentPage() {
             <CardContent className="space-y-2 text-sm">
               <p>1. Login as admin at <code>/login/admin</code></p>
               <p>2. Go to <code>/dashboard/admin</code></p>
-              <p>3. Click "Hall Management"</p>
+              <p>3. Click &quot;Hall Management&quot;</p>
               <p>4. Access <code>/dashboard/admin/halls</code></p>
             </CardContent>
           </Card>

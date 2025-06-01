@@ -147,7 +147,7 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
       console.log('🔐 Auth check - Token:', localStorage.getItem('token') ? 'EXISTS' : 'MISSING');
       console.log('🎯 Booking data:', bookingData);
 
-      const response = await bookingsAPI.create(bookingData);
+      await bookingsAPI.create(bookingData);
 
       toast({
         title: "Booking Request Submitted Successfully!",
