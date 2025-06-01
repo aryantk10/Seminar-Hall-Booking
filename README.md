@@ -1,4 +1,4 @@
-﻿# 🏛️ Seminar Hall Booking System
+﻿# 🏛️ Seminar Hall Booking System - Admin UI Ready
 
 A comprehensive web application for managing seminar hall bookings with role-based access control, built with Next.js, Node.js, and MongoDB.
 
