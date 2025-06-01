@@ -32,24 +32,44 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const { hallId, startDate, endDate, purpose, attendees, requirements } = req.body;
 
-    // Find hall by name (since frontend sends hall IDs that don't match MongoDB ObjectIds)
+    console.log('🎯 Booking request received:', { hallId, startDate, endDate, purpose });
+
+    // TEMPORARY FIX: Map all frontend hall IDs to existing "Test Hall"
+    // This allows booking to work while we fix the hall population issue
     const hallMapping: Record<string, string> = {
-      'apex-auditorium': 'APEX Auditorium',
-      'esb-hall-1': 'ESB Seminar Hall - I',
-      'esb-hall-2': 'ESB Seminar Hall - II',
-      'esb-hall-3': 'ESB Seminar Hall - III',
-      'des-hall-1': 'DES Seminar Hall - I',
-      'des-hall-2': 'DES Seminar Hall - II',
-      'lhc-hall-1': 'LHC Seminar Hall - I',
-      'lhc-hall-2': 'LHC Seminar Hall - II'
+      // Full hall IDs (correct format) - temporarily map to Test Hall
+      'apex-auditorium': 'Test Hall',
+      'esb-hall-1': 'Test Hall',
+      'esb-hall-2': 'Test Hall',
+      'esb-hall-3': 'Test Hall',
+      'des-hall-1': 'Test Hall',
+      'des-hall-2': 'Test Hall',
+      'lhc-hall-1': 'Test Hall',
+      'lhc-hall-2': 'Test Hall',
+
+      // Short hall IDs (for backward compatibility)
+      'apex': 'Test Hall',
+      'esb1': 'Test Hall',
+      'esb2': 'Test Hall',
+      'esb3': 'Test Hall',
+      'des1': 'Test Hall',
+      'des2': 'Test Hall',
+      'lhc1': 'Test Hall',
+      'lhc2': 'Test Hall'
     };
 
-    const hallName = (hallMapping as any)[hallId] || hallId;
+    const hallName = hallMapping[hallId] || hallId;
+    console.log('🏢 Looking for hall:', { hallId, mappedName: hallName });
+
     const hall = await Hall.findOne({ name: hallName });
     if (!hall) {
+      console.log('❌ Hall not found in database:', hallName);
+      console.log('📋 Available halls:', await Hall.find({}, 'name').lean());
       res.status(404).json({ message: `Hall not found: ${hallName}` });
       return;
     }
+
+    console.log('✅ Hall found:', { id: hall._id, name: hall.name });
 
     // Parse dates and extract time from requirements
     const startTime = new Date(startDate);
@@ -65,15 +85,21 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
 
         startTime.setHours(startHour, startMin, 0, 0);
         endTime.setHours(endHour, endMin, 0, 0);
+        console.log('⏰ Time extracted from requirements:', { startTime, endTime });
       }
     }
+
+    console.log('📅 Final booking times:', { startTime, endTime });
 
     // Check for conflicts
     const conflict = await checkBookingConflict(hall._id.toString(), startTime, endTime);
     if (conflict) {
+      console.log('⚠️ Booking conflict detected:', conflict);
       res.status(400).json({ message: 'Hall is already booked for this time slot' });
       return;
     }
+
+    console.log('✅ No conflicts found, creating booking...');
 
     const booking = await Booking.create({
       hall: hall._id,
@@ -86,15 +112,18 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
       status: 'pending',
     });
 
+    console.log('🎉 Booking created successfully:', booking._id);
+
     // Populate the response
     const populatedBooking = await Booking.findById(booking._id)
       .populate('hall', 'name location')
       .populate('user', 'name email');
 
+    console.log('📤 Sending response with populated booking');
     res.status(201).json(populatedBooking);
   } catch (error) {
-    console.error('Booking creation error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Booking creation error:', error);
+    res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
