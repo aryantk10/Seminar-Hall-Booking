@@ -26,7 +26,7 @@ router.get('/test', (req, res) => {
 router.get('/populate', async (req, res) => {
   try {
     // Import Hall model properly
-    const Hall = (await import('../models/hall.model')).default;
+    const Hall = require('../models/hall.model').default;
 
     console.log('Starting hall population...');
 
