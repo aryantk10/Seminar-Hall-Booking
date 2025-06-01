@@ -141,11 +141,38 @@ export const getBookings = async (req: Request, res: Response): Promise<void> =>
 
 export const getMyBookings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    console.log('🔍 getMyBookings called for user:', req.user._id);
+
+    // First, get all bookings to debug
+    const allBookings = await Booking.find({})
+      .populate('hall', 'name location')
+      .populate('user', 'name email');
+
+    console.log('📊 Total bookings in database:', allBookings.length);
+    console.log('📊 All bookings:', allBookings.map(b => ({
+      id: b._id,
+      userId: b.user?._id || b.user,
+      userName: b.user?.name,
+      hallName: b.hall?.name,
+      purpose: b.purpose
+    })));
+
+    // Now get user-specific bookings
     const bookings = await Booking.find({ user: req.user._id })
       .populate('hall', 'name location')
       .sort('-createdAt');
+
+    console.log('📊 User bookings found:', bookings.length);
+    console.log('📊 User bookings:', bookings.map(b => ({
+      id: b._id,
+      hallName: b.hall?.name,
+      purpose: b.purpose,
+      status: b.status
+    })));
+
     res.json(bookings);
   } catch (error) {
+    console.error('❌ getMyBookings error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
