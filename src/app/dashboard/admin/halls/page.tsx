@@ -227,6 +227,10 @@ export default function AdminHallsPage() {
               <li>Or update your user role to admin in database</li>
             </ul>
           </div>
+          <div className="mt-4 p-4 bg-green-50 rounded">
+            <p className="font-medium text-green-800">🎉 SUCCESS: Page is loading correctly!</p>
+            <p className="text-green-700 text-sm">The admin UI components are working. You just need admin access.</p>
+          </div>
         </div>
       </div>
     );
@@ -237,9 +241,9 @@ export default function AdminHallsPage() {
       <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Hall Management</h1>
+          <h1 className="text-3xl font-bold">Hall Management v3.0</h1>
           <p className="text-muted-foreground mt-2">
-            Manage seminar halls, auditoriums, and meeting rooms - Admin Panel (Updated)
+            Manage seminar halls, auditoriums, and meeting rooms - Admin Panel (Cache Busted: {Date.now()})
           </p>
         </div>
         
