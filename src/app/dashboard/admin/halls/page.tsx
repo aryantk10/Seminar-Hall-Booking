@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HallForm } from '@/components/admin/HallForm';
 import { DeleteHallDialog } from '@/components/admin/DeleteHallDialog';
-import Image from 'next/image';
 
 interface Hall {
   _id: string;
@@ -318,17 +317,11 @@ export default function AdminHallsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {halls.map((hall) => (
           <Card key={hall._id} className="overflow-hidden">
-            <div className="aspect-video relative bg-muted">
-              <Image
-                src={hall.images?.[0] || '/images/halls/default-hall.jpg'}
-                alt={hall.name}
-                width={400}
-                height={225}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = '/images/halls/default-hall.jpg';
-                }}
-              />
+            <div className="aspect-video relative bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+              <div className="text-center">
+                <Building className="h-12 w-12 text-blue-600 mx-auto mb-2" />
+                <p className="text-blue-800 font-medium">{hall.name}</p>
+              </div>
               <div className="absolute top-2 right-2">
                 <Badge variant={hall.isAvailable ? "default" : "secondary"}>
                   {hall.isAvailable ? "Available" : "Unavailable"}
