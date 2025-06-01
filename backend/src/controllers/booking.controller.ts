@@ -35,28 +35,27 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
     console.log('🎯 Booking request received:', { hallId, startDate, endDate, purpose });
     console.log('🔧 DEPLOYMENT TEST - Using Test Hall mapping for all halls');
 
-    // TEMPORARY FIX: Map all frontend hall IDs to existing "Test Hall"
-    // This allows booking to work while we fix the hall population issue
+    // Map frontend hall IDs to actual database hall names
     const hallMapping: Record<string, string> = {
-      // Full hall IDs (correct format) - temporarily map to Test Hall
-      'apex-auditorium': 'Test Hall',
-      'esb-hall-1': 'Test Hall',
-      'esb-hall-2': 'Test Hall',
-      'esb-hall-3': 'Test Hall',
-      'des-hall-1': 'Test Hall',
-      'des-hall-2': 'Test Hall',
-      'lhc-hall-1': 'Test Hall',
-      'lhc-hall-2': 'Test Hall',
+      // Full hall IDs (correct format) - map to actual database hall names
+      'apex-auditorium': 'APEX Auditorium',
+      'esb-hall-1': 'ESB Seminar Hall - I',
+      'esb-hall-2': 'ESB Seminar Hall - II',
+      'esb-hall-3': 'ESB Seminar Hall - III',
+      'des-hall-1': 'DES Seminar Hall - I',
+      'des-hall-2': 'DES Seminar Hall - II',
+      'lhc-hall-1': 'LHC Seminar Hall - I',
+      'lhc-hall-2': 'LHC Seminar Hall - II',
 
       // Short hall IDs (for backward compatibility)
-      'apex': 'Test Hall',
-      'esb1': 'Test Hall',
-      'esb2': 'Test Hall',
-      'esb3': 'Test Hall',
-      'des1': 'Test Hall',
-      'des2': 'Test Hall',
-      'lhc1': 'Test Hall',
-      'lhc2': 'Test Hall'
+      'apex': 'APEX Auditorium',
+      'esb1': 'ESB Seminar Hall - I',
+      'esb2': 'ESB Seminar Hall - II',
+      'esb3': 'ESB Seminar Hall - III',
+      'des1': 'DES Seminar Hall - I',
+      'des2': 'DES Seminar Hall - II',
+      'lhc1': 'LHC Seminar Hall - I',
+      'lhc2': 'LHC Seminar Hall - II'
     };
 
     const hallName = hallMapping[hallId] || hallId;
@@ -151,9 +150,9 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
     console.log('📊 Total bookings in database:', allBookings.length);
     console.log('📊 All bookings:', allBookings.map(b => ({
       id: b._id,
-      userId: b.user?._id || b.user,
-      userName: b.user?.name,
-      hallName: b.hall?.name,
+      userId: (b.user as any)?._id || b.user,
+      userName: (b.user as any)?.name,
+      hallName: (b.hall as any)?.name,
       purpose: b.purpose
     })));
 
@@ -166,7 +165,7 @@ export const getMyBookings = async (req: AuthRequest, res: Response): Promise<vo
     console.log('📊 User bookings found:', bookings.length);
     console.log('📊 User bookings:', bookings.map(b => ({
       id: b._id,
-      hallName: b.hall?.name,
+      hallName: (b.hall as any)?.name,
       purpose: b.purpose,
       status: b.status
     })));
