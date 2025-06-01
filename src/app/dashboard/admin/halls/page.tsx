@@ -17,15 +17,13 @@ import Image from 'next/image';
 
 interface Hall {
   _id: string;
-  id: string;
   name: string;
   capacity: number;
   location: string;
-  amenities: string[];
-  description: string;
-  image: string;
-  block: string;
-  type: string;
+  facilities: string[];
+  description?: string;
+  images?: string[];
+  isAvailable: boolean;
 }
 
 interface ApiError {
@@ -41,11 +39,9 @@ interface HallFormData {
   name: string;
   capacity: number | string;
   location: string;
-  amenities: string[];
-  description: string;
-  image: string;
-  block: string;
-  type: string;
+  facilities: string[];
+  description?: string;
+  images?: string[];
 }
 
 export default function AdminHallsPage() {
@@ -268,12 +264,12 @@ export default function AdminHallsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hall Types</CardTitle>
+            <CardTitle className="text-sm font-medium">Available Halls</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Set(halls.map(hall => hall.type)).size}
+              {halls.filter(hall => hall.isAvailable).length}
             </div>
           </CardContent>
         </Card>
@@ -296,7 +292,7 @@ export default function AdminHallsPage() {
           <Card key={hall._id} className="overflow-hidden">
             <div className="aspect-video relative bg-muted">
               <Image
-                src={hall.image}
+                src={hall.images?.[0] || '/images/halls/default-hall.jpg'}
                 alt={hall.name}
                 width={400}
                 height={225}
@@ -306,7 +302,9 @@ export default function AdminHallsPage() {
                 }}
               />
               <div className="absolute top-2 right-2">
-                <Badge variant="secondary">{hall.type}</Badge>
+                <Badge variant={hall.isAvailable ? "default" : "secondary"}>
+                  {hall.isAvailable ? "Available" : "Unavailable"}
+                </Badge>
               </div>
             </div>
             
@@ -320,6 +318,7 @@ export default function AdminHallsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => openEditDialog(hall)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -335,6 +334,7 @@ export default function AdminHallsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => openDeleteDialog(hall)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -345,7 +345,7 @@ export default function AdminHallsPage() {
                   </Tooltip>
                 </div>
               </CardTitle>
-              <CardDescription>{hall.description}</CardDescription>
+              <CardDescription>{hall.description || 'No description available'}</CardDescription>
             </CardHeader>
             
             <CardContent>
@@ -358,21 +358,17 @@ export default function AdminHallsPage() {
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                   <span>{hall.location}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                  <span>{hall.block}</span>
-                </div>
-                
-                {hall.amenities && hall.amenities.length > 0 && (
+
+                {hall.facilities && hall.facilities.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-3">
-                    {hall.amenities.slice(0, 3).map((amenity, index) => (
+                    {hall.facilities.slice(0, 3).map((facility, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
-                        {amenity}
+                        {facility}
                       </Badge>
                     ))}
-                    {hall.amenities.length > 3 && (
+                    {hall.facilities.length > 3 && (
                       <Badge variant="outline" className="text-xs">
-                        +{hall.amenities.length - 3} more
+                        +{hall.facilities.length - 3} more
                       </Badge>
                     )}
                   </div>

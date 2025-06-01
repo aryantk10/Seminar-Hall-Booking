@@ -18,15 +18,13 @@ import { AlertTriangle, Building, Users, MapPin } from 'lucide-react';
 
 interface Hall {
   _id: string;
-  id: string;
   name: string;
   capacity: number;
   location: string;
-  amenities: string[];
-  description: string;
-  image: string;
-  block: string;
-  type: string;
+  facilities: string[];
+  description?: string;
+  images?: string[];
+  isAvailable: boolean;
 }
 
 interface DeleteHallDialogProps {
@@ -83,7 +81,9 @@ export function DeleteHallDialog({ hall, open, onOpenChange, onConfirm }: Delete
                 <div className="flex items-center gap-2">
                   <Building className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">{hall.name}</span>
-                  <Badge variant="outline">{hall.type}</Badge>
+                  <Badge variant={hall.isAvailable ? "default" : "secondary"}>
+                    {hall.isAvailable ? "Available" : "Unavailable"}
+                  </Badge>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -97,16 +97,16 @@ export function DeleteHallDialog({ hall, open, onOpenChange, onConfirm }: Delete
                   </div>
                 </div>
                 
-                {hall.amenities && hall.amenities.length > 0 && (
+                {hall.facilities && hall.facilities.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {hall.amenities.slice(0, 3).map((amenity: string, index: number) => (
+                    {hall.facilities.slice(0, 3).map((facility: string, index: number) => (
                       <Badge key={index} variant="secondary" className="text-xs">
-                        {amenity}
+                        {facility}
                       </Badge>
                     ))}
-                    {hall.amenities.length > 3 && (
+                    {hall.facilities.length > 3 && (
                       <Badge variant="secondary" className="text-xs">
-                        +{hall.amenities.length - 3} more
+                        +{hall.facilities.length - 3} more
                       </Badge>
                     )}
                   </div>

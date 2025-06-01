@@ -5,20 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Badge } from '@/components/ui/badge';
 import { X, Plus } from 'lucide-react';
-import Image from 'next/image';
 
 interface HallData {
   name: string;
   capacity: number | string;
   location: string;
-  description: string;
-  image: string;
-  block: string;
-  type: string;
-  amenities: string[];
+  description?: string;
+  images?: string[];
+  facilities: string[];
 }
 
 interface HallFormProps {
@@ -27,26 +24,9 @@ interface HallFormProps {
   isEditing?: boolean;
 }
 
-const hallTypes = [
-  'Seminar Hall',
-  'Auditorium',
-  'Conference Room',
-  'Board Room',
-  'Meeting Room',
-  'Lecture Hall',
-  'Training Room'
-];
 
-const blocks = [
-  'ESB (Engineering Sciences Block)',
-  'DES (Department of Engineering Sciences)',
-  'LHC (Lecture Hall Complex)',
-  'APEX Block',
-  'Main Building',
-  'Administrative Block'
-];
 
-const commonAmenities = [
+const commonFacilities = [
   'Projector',
   'Screen',
   'Audio System',
@@ -67,13 +47,11 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
     capacity: initialData?.capacity || '',
     location: initialData?.location || '',
     description: initialData?.description || '',
-    image: initialData?.image || '',
-    block: initialData?.block || '',
-    type: initialData?.type || '',
-    amenities: initialData?.amenities || []
+    images: initialData?.images || [],
+    facilities: initialData?.facilities || []
   });
 
-  const [newAmenity, setNewAmenity] = useState('');
+  const [newFacility, setNewFacility] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -83,20 +61,20 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
     }));
   };
 
-  const addAmenity = (amenity: string) => {
-    if (amenity && !formData.amenities.includes(amenity)) {
+  const addFacility = (facility: string) => {
+    if (facility && !formData.facilities.includes(facility)) {
       setFormData(prev => ({
         ...prev,
-        amenities: [...prev.amenities, amenity]
+        facilities: [...prev.facilities, facility]
       }));
     }
-    setNewAmenity('');
+    setNewFacility('');
   };
 
-  const removeAmenity = (amenity: string) => {
+  const removeFacility = (facility: string) => {
     setFormData(prev => ({
       ...prev,
-      amenities: prev.amenities.filter(a => a !== amenity)
+      facilities: prev.facilities.filter(f => f !== facility)
     }));
   };
 
@@ -120,13 +98,12 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
 
       // Prepare submission data
       const submitData = {
-        ...formData,
+        name: formData.name,
         capacity: capacityNum,
-        image: formData.image || '/images/halls/default-hall.jpg',
-        // Ensure we have default values for optional fields
+        location: formData.location,
+        facilities: formData.facilities,
         description: formData.description || '',
-        block: formData.block || 'Main Building',
-        type: formData.type || 'Seminar Hall'
+        images: formData.images.length > 0 ? formData.images : ['/images/halls/default-hall.jpg']
       };
 
       console.log('📝 Submitting hall form:', submitData);
@@ -180,50 +157,7 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
           />
         </div>
 
-        {/* Block */}
-        <div className="space-y-2">
-          <Label htmlFor="block">Block</Label>
-          <Select value={formData.block} onValueChange={(value) => handleInputChange('block', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select block" />
-            </SelectTrigger>
-            <SelectContent>
-              {blocks.map((block) => (
-                <SelectItem key={block} value={block}>
-                  {block}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* Type */}
-        <div className="space-y-2">
-          <Label htmlFor="type">Hall Type</Label>
-          <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              {hallTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Image URL */}
-        <div className="space-y-2">
-          <Label htmlFor="image">Image URL</Label>
-          <Input
-            id="image"
-            value={formData.image}
-            onChange={(e) => handleInputChange('image', e.target.value)}
-            placeholder="/images/halls/hall-name.jpg"
-          />
-        </div>
       </div>
 
       {/* Description */}
@@ -238,63 +172,63 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
         />
       </div>
 
-      {/* Amenities */}
+      {/* Facilities */}
       <div className="space-y-2">
-        <Label>Amenities</Label>
-        
+        <Label>Facilities</Label>
+
         {/* Quick Add Buttons */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {commonAmenities.map((amenity) => (
+          {commonFacilities.map((facility) => (
             <Button
-              key={amenity}
+              key={facility}
               type="button"
-              variant={formData.amenities.includes(amenity) ? "default" : "outline"}
+              variant={formData.facilities.includes(facility) ? "default" : "outline"}
               size="sm"
               onClick={() => {
-                if (formData.amenities.includes(amenity)) {
-                  removeAmenity(amenity);
+                if (formData.facilities.includes(facility)) {
+                  removeFacility(facility);
                 } else {
-                  addAmenity(amenity);
+                  addFacility(facility);
                 }
               }}
             >
-              {amenity}
+              {facility}
             </Button>
           ))}
         </div>
 
-        {/* Custom Amenity Input */}
+        {/* Custom Facility Input */}
         <div className="flex gap-2">
           <Input
-            value={newAmenity}
-            onChange={(e) => setNewAmenity(e.target.value)}
-            placeholder="Add custom amenity..."
+            value={newFacility}
+            onChange={(e) => setNewFacility(e.target.value)}
+            placeholder="Add custom facility..."
             onKeyPress={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
-                addAmenity(newAmenity);
+                addFacility(newFacility);
               }
             }}
           />
           <Button
             type="button"
             variant="outline"
-            onClick={() => addAmenity(newAmenity)}
-            disabled={!newAmenity}
+            onClick={() => addFacility(newFacility)}
+            disabled={!newFacility}
           >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Selected Amenities */}
-        {formData.amenities.length > 0 && (
+        {/* Selected Facilities */}
+        {formData.facilities.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
-            {formData.amenities.map((amenity, index) => (
+            {formData.facilities.map((facility, index) => (
               <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                {amenity}
+                {facility}
                 <button
                   type="button"
-                  onClick={() => removeAmenity(amenity)}
+                  onClick={() => removeFacility(facility)}
                   className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full p-0.5"
                 >
                   <X className="h-3 w-3" />
@@ -305,24 +239,7 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
         )}
       </div>
 
-      {/* Image Preview */}
-      {formData.image && (
-        <div className="space-y-2">
-          <Label>Image Preview</Label>
-          <div className="w-full h-48 bg-muted rounded-lg overflow-hidden">
-            <Image
-              src={formData.image}
-              alt="Hall preview"
-              width={400}
-              height={192}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/images/halls/default-hall.jpg';
-              }}
-            />
-          </div>
-        </div>
-      )}
+
 
       {/* Submit Button */}
       <div className="flex justify-end gap-3">
