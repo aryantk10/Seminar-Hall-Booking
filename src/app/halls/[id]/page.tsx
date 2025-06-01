@@ -14,8 +14,10 @@ interface Hall {
   pricePerHour: number;
 }
 
+type HallId = 'apex-auditorium' | 'esb-hall-1' | 'esb-hall-2' | 'esb-hall-3' | 'des-hall-1' | 'des-hall-2' | 'lhc-hall-1' | 'lhc-hall-2';
+
 const getHallDetails = (id: string): Hall => {
-  const halls: Record<string, Hall> = {
+  const halls: Record<HallId, Hall> = {
     // Auditorium
     'apex-auditorium': {
       id: 'apex-auditorium',
@@ -110,7 +112,7 @@ const getHallDetails = (id: string): Hall => {
     }
   }
 
-  return halls[id] || halls['apex-auditorium']
+  return halls[id as HallId] || halls['apex-auditorium']
 }
 
 export default async function HallDetailsPage({ params }: { params: Promise<{ id: string }> }) {
