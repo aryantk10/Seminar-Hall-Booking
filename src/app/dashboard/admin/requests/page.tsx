@@ -12,6 +12,7 @@ import { CheckCircle, Clock, XCircle, HelpCircle, Trash2, Bell } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { bookings as bookingsAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { getBookingTime } from "@/lib/time-utils";
 
 interface BookingApiResponse {
   _id: string;
@@ -60,16 +61,8 @@ export default function AdminRequestsPage() {
             userId: booking.user?._id || booking.userId || '',
             userName: booking.user?.name || 'Unknown User',
             date: new Date(booking.startTime || booking.date || new Date()),
-            startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }),
-            endTime: new Date(booking.endTime).toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }),
+            startTime: getBookingTime(booking.startTime),
+            endTime: getBookingTime(booking.endTime),
             purpose: booking.purpose,
             status: booking.status as 'pending' | 'approved' | 'rejected' | 'cancelled',
             requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),

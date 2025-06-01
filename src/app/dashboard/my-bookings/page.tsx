@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { getBookingTime } from "@/lib/time-utils";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, XCircle, Trash2, HelpCircle, ExternalLink, Bell } from "lucide-react";
 import {
@@ -199,16 +200,8 @@ export default function MyBookingsPage() {
             userId: booking.user?._id || booking.userId || 'no-user-id',
             userName: booking.user?.name || user?.name || 'Unknown User',
             date: new Date(booking.startTime || booking.date || new Date()),
-            startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }),
-            endTime: new Date(booking.endTime).toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false
-            }),
+            startTime: getBookingTime(booking.startTime),
+            endTime: getBookingTime(booking.endTime),
             purpose: booking.purpose,
             status: booking.status,
             requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
