@@ -10,7 +10,7 @@ export default function TestDeploymentPage() {
   const [testResults, setTestResults] = useState<string[]>([]);
 
   const runTests = () => {
-    const results = [];
+    const results: string[] = [];
     
     // Test 1: Check if admin components exist
     try {
