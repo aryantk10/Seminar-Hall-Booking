@@ -195,7 +195,7 @@ export default function AdminHallsPage() {
         <div>
           <h1 className="text-3xl font-bold">Hall Management</h1>
           <p className="text-muted-foreground mt-2">
-            Manage seminar halls, auditoriums, and meeting rooms
+            Manage seminar halls, auditoriums, and meeting rooms - Admin Panel
           </p>
         </div>
         
