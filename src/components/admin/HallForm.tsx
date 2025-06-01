@@ -8,10 +8,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus } from 'lucide-react';
+import Image from 'next/image';
+
+interface HallData {
+  name: string;
+  capacity: number | string;
+  location: string;
+  description: string;
+  image: string;
+  block: string;
+  type: string;
+  amenities: string[];
+}
 
 interface HallFormProps {
-  initialData?: any;
-  onSubmit: (data: any) => void;
+  initialData?: HallData;
+  onSubmit: (data: HallData) => void;
   isEditing?: boolean;
 }
 
@@ -107,7 +119,7 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
 
       console.log('📝 Submitting hall form:', submitData);
       await onSubmit(submitData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Form submission error:', error);
     } finally {
       setIsSubmitting(false);
@@ -285,9 +297,11 @@ export function HallForm({ initialData, onSubmit, isEditing = false }: HallFormP
         <div className="space-y-2">
           <Label>Image Preview</Label>
           <div className="w-full h-48 bg-muted rounded-lg overflow-hidden">
-            <img
+            <Image
               src={formData.image}
               alt="Hall preview"
+              width={400}
+              height={192}
               className="w-full h-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = '/images/halls/default-hall.jpg';

@@ -18,6 +18,37 @@ interface PageRouteParams {
   hallId: string;
 }
 
+interface BookingApiResponse {
+  _id: string;
+  hall?: {
+    _id: string;
+    name: string;
+  };
+  hallId?: string;
+  user?: {
+    _id: string;
+    name: string;
+  };
+  userId?: string;
+  startTime: string;
+  endTime: string;
+  date?: string;
+  purpose: string;
+  status: string;
+  createdAt: string;
+  requestedAt?: string;
+}
+
+interface ApiError {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";
 
 export default function BookHallPage({ params: paramsPromise }: { params: Promise<PageRouteParams> }) {
@@ -58,20 +89,21 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
           console.log('🚀 Trying to fetch approved bookings for conflict checking...');
           response = await bookingsAPI.getApproved();
           console.log('✅ Successfully fetched approved bookings:', response.data?.length || 0);
-        } catch (error: any) {
-          console.log('❌ Approved bookings endpoint failed:', error.response?.status);
+        } catch (error: unknown) {
+          const apiError = error as ApiError;
+          console.log('❌ Approved bookings endpoint failed:', apiError.response?.status);
           console.log('🔄 Falling back to user bookings for conflict checking...');
           response = await bookingsAPI.getMyBookings();
           console.log('✅ Successfully fetched user bookings:', response.data?.length || 0);
         }
 
-        const apiBookings = response.data.map((booking: any) => ({
+        const apiBookings = response.data.map((booking: BookingApiResponse) => ({
           id: booking._id,
-          hallId: booking.hall?._id || booking.hallId,
+          hallId: booking.hall?._id || booking.hallId || '',
           hallName: booking.hall?.name || 'Unknown Hall',
-          userId: booking.user?._id || booking.userId,
+          userId: booking.user?._id || booking.userId || '',
           userName: booking.user?.name || 'Unknown User',
-          date: new Date(booking.startTime || booking.date),
+          date: new Date(booking.startTime || booking.date || new Date()),
           startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
@@ -84,7 +116,7 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
           }),
           purpose: booking.purpose,
           status: booking.status,
-          requestedAt: new Date(booking.createdAt || booking.requestedAt),
+          requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
         }));
 
         setBookings(apiBookings);

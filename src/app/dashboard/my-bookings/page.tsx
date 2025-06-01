@@ -23,6 +23,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import Link from "next/link";
 
+interface BookingApiResponse {
+  _id: string;
+  hall?: {
+    _id: string;
+    name: string;
+  };
+  hallId?: string;
+  user?: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  userId?: string;
+  startTime: string;
+  endTime: string;
+  date?: string;
+  purpose: string;
+  status: string;
+  createdAt: string;
+  requestedAt?: string;
+}
+
+interface ApiError {
+  message?: string;
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export default function MyBookingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -75,8 +107,9 @@ export default function MyBookingsPage() {
               timeoutPromise
             ]);
             console.log('✅ SUCCESS: getMyBookings worked');
-          } catch (error: any) {
-            console.log('❌ getMyBookings failed:', error.message);
+          } catch (error: unknown) {
+            const apiError = error as ApiError;
+            console.log('❌ getMyBookings failed:', apiError.message);
             console.log('🔧 Trying direct fetch...');
 
             const token = localStorage.getItem('token');
@@ -108,7 +141,7 @@ export default function MyBookingsPage() {
             console.log('📡 First booking user:', response.data[0].user);
 
             // Check all users in the bookings
-            const allUsers = response.data.map((booking: any) => ({
+            const allUsers = response.data.map((booking: BookingApiResponse) => ({
               bookingId: booking._id,
               userId: booking.user?._id,
               userEmail: booking.user?.email,
@@ -126,7 +159,7 @@ export default function MyBookingsPage() {
           }
           // SMART FILTER: Remove corrupted data but keep real bookings
           console.log('🔥 SMART FILTERING: Removing only corrupted data');
-          const validBookings = response.data.filter((booking: any) => {
+          const validBookings = response.data.filter((booking: BookingApiResponse) => {
             // Only filter out bookings with null users or Test Hall
             const hasValidUser = booking.user && booking.user._id;
             const hasValidHall = booking.hall && booking.hall.name && booking.hall.name !== 'Test Hall';
@@ -158,13 +191,13 @@ export default function MyBookingsPage() {
           console.log(`📊 Valid bookings after filtering: ${validBookings.length}`);
 
           // TEMPORARY: Show ALL bookings to debug sync issue
-          const apiBookings = validBookings.map((booking: any) => ({
+          const apiBookings = validBookings.map((booking: BookingApiResponse) => ({
             id: booking._id,
             hallId: booking.hall?._id || booking.hallId || 'no-hall-id',
             hallName: booking.hall?.name || 'Unknown Hall',
             userId: booking.user?._id || booking.userId || 'no-user-id',
             userName: booking.user?.name || user?.name || 'Unknown User',
-            date: new Date(booking.startTime || booking.date),
+            date: new Date(booking.startTime || booking.date || new Date()),
             startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
@@ -177,7 +210,7 @@ export default function MyBookingsPage() {
             }),
             purpose: booking.purpose,
             status: booking.status,
-            requestedAt: new Date(booking.createdAt || booking.requestedAt),
+            requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
           }));
 
           console.log('📊 Processed bookings:', apiBookings);

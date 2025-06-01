@@ -155,11 +155,12 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
       });
 
       router.push("/dashboard/my-bookings");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { message?: string } } };
       console.error('Booking creation error:', error);
       toast({
         title: "Booking Failed",
-        description: error.response?.data?.message || "Failed to create booking. Please try again.",
+        description: apiError.response?.data?.message || "Failed to create booking. Please try again.",
         variant: "destructive",
       });
     } finally {

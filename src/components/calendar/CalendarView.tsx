@@ -18,6 +18,37 @@ import { useToast } from "@/hooks/use-toast";
 
 const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";
 
+interface BookingApiResponse {
+  _id: string;
+  hall?: {
+    _id: string;
+    name: string;
+  };
+  hallId?: string;
+  user?: {
+    _id: string;
+    name: string;
+  };
+  userId?: string;
+  startTime: string;
+  endTime: string;
+  date?: string;
+  purpose: string;
+  status: string;
+  createdAt: string;
+  requestedAt?: string;
+}
+
+interface ApiError {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 interface CalendarViewProps {
   initialBookings?: Booking[];
   showHallFilter?: boolean;
@@ -63,8 +94,9 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
             console.log('🚀 Trying to fetch approved bookings...');
             response = await bookingsAPI.getApproved();
             console.log('✅ Successfully fetched approved bookings:', response.data?.length || 0);
-          } catch (error: any) {
-            console.log('❌ Approved bookings endpoint failed:', error.response?.status);
+          } catch (error: unknown) {
+            const apiError = error as ApiError;
+            console.log('❌ Approved bookings endpoint failed:', apiError.response?.status);
             console.log('🔄 Falling back to user bookings...');
             try {
               response = await bookingsAPI.getMyBookings();
@@ -76,13 +108,13 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
             }
           }
 
-          const apiBookings = response.data.map((booking: any) => ({
+          const apiBookings = response.data.map((booking: BookingApiResponse) => ({
             id: booking._id,
             hallId: booking.hall?._id || booking.hallId,
             hallName: booking.hall?.name || 'Unknown Hall',
             userId: booking.user?._id || booking.userId,
             userName: booking.user?.name || 'Unknown User',
-            date: new Date(booking.startTime || booking.date),
+            date: new Date(booking.startTime || booking.date || new Date()),
             startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
@@ -95,7 +127,7 @@ export default function CalendarView({ initialBookings = [], showHallFilter = fa
             }),
             purpose: booking.purpose,
             status: booking.status,
-            requestedAt: new Date(booking.createdAt || booking.requestedAt),
+            requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
           }));
 
           setBookings(apiBookings);

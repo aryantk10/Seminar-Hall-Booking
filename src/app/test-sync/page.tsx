@@ -15,13 +15,20 @@ interface BookingData {
   status: string
 }
 
+interface TestBookingData {
+  _id: string
+  purpose: string
+  status: string
+  createdAt: string
+}
+
 export default function TestSyncPage() {
   const { user } = useAuth()
   const isAuthenticated = !!user // Derive authentication status from user existence
   const [bookings, setBookings] = useState<BookingData[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [testBooking, setTestBooking] = useState<unknown>(null)
+  const [testBooking, setTestBooking] = useState<TestBookingData | null>(null)
 
   const fetchBookings = useCallback(async () => {
     if (!isAuthenticated) {
@@ -71,7 +78,7 @@ export default function TestSyncPage() {
       }
 
       const response = await api.post('/bookings', testBookingData)
-      setTestBooking(response.data)
+      setTestBooking(response.data as TestBookingData)
       
       // Refresh bookings list
       await fetchBookings()

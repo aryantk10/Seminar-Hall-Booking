@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +10,33 @@ import { Plus, Edit, Trash2, Users, MapPin, Building } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { HallForm } from '@/components/admin/HallForm';
 import { DeleteHallDialog } from '@/components/admin/DeleteHallDialog';
+import Image from 'next/image';
 
 interface Hall {
   _id: string;
   id: string;
   name: string;
   capacity: number;
+  location: string;
+  amenities: string[];
+  description: string;
+  image: string;
+  block: string;
+  type: string;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
+interface HallFormData {
+  name: string;
+  capacity: number | string;
   location: string;
   amenities: string[];
   description: string;
@@ -33,11 +54,7 @@ export default function AdminHallsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchHalls();
-  }, []);
-
-  const fetchHalls = async () => {
+  const fetchHalls = useCallback(async () => {
     try {
       setLoading(true);
       console.log('🏢 Fetching halls for admin management...');
@@ -45,7 +62,7 @@ export default function AdminHallsPage() {
       const hallsData = response.data as Hall[];
       setHalls(hallsData);
       console.log(`✅ Loaded ${hallsData.length} halls`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Error fetching halls:', error);
       toast({
         title: "Error",
@@ -55,52 +72,66 @@ export default function AdminHallsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const handleCreateHall = async (hallData: any) => {
+  useEffect(() => {
+    fetchHalls();
+  }, [fetchHalls]);
+
+  const handleCreateHall = async (hallData: HallFormData) => {
     try {
       console.log('🏗️ Creating new hall:', hallData);
-      const response = await hallsAPI.create(hallData);
+      const processedData = {
+        ...hallData,
+        capacity: typeof hallData.capacity === 'string' ? parseInt(hallData.capacity) : hallData.capacity
+      };
+      const response = await hallsAPI.create(processedData);
       console.log('✅ Hall created successfully:', response.data);
-      
+
       toast({
         title: "Success",
         description: `Hall "${hallData.name}" created successfully!`,
       });
-      
+
       setIsCreateDialogOpen(false);
       fetchHalls(); // Refresh the list
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       console.error('❌ Error creating hall:', error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to create hall. Please try again.",
+        description: apiError.response?.data?.message || "Failed to create hall. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const handleUpdateHall = async (hallData: any) => {
+  const handleUpdateHall = async (hallData: HallFormData) => {
     if (!selectedHall) return;
-    
+
     try {
       console.log('📝 Updating hall:', selectedHall._id, hallData);
-      const response = await hallsAPI.update(selectedHall._id, hallData);
+      const processedData = {
+        ...hallData,
+        capacity: typeof hallData.capacity === 'string' ? parseInt(hallData.capacity) : hallData.capacity
+      };
+      const response = await hallsAPI.update(selectedHall._id, processedData);
       console.log('✅ Hall updated successfully:', response.data);
-      
+
       toast({
         title: "Success",
         description: `Hall "${hallData.name}" updated successfully!`,
       });
-      
+
       setIsEditDialogOpen(false);
       setSelectedHall(null);
       fetchHalls(); // Refresh the list
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       console.error('❌ Error updating hall:', error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update hall. Please try again.",
+        description: apiError.response?.data?.message || "Failed to update hall. Please try again.",
         variant: "destructive",
       });
     }
@@ -108,25 +139,26 @@ export default function AdminHallsPage() {
 
   const handleDeleteHall = async () => {
     if (!selectedHall) return;
-    
+
     try {
       console.log('🗑️ Deleting hall:', selectedHall._id);
       const response = await hallsAPI.delete(selectedHall._id);
       console.log('✅ Hall deleted successfully:', response.data);
-      
+
       toast({
         title: "Success",
         description: `Hall "${selectedHall.name}" deleted successfully!`,
       });
-      
+
       setIsDeleteDialogOpen(false);
       setSelectedHall(null);
       fetchHalls(); // Refresh the list
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
       console.error('❌ Error deleting hall:', error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to delete hall. Please try again.",
+        description: apiError.response?.data?.message || "Failed to delete hall. Please try again.",
         variant: "destructive",
       });
     }
@@ -188,9 +220,11 @@ export default function AdminHallsPage() {
         {halls.map((hall) => (
           <Card key={hall._id} className="overflow-hidden">
             <div className="aspect-video relative bg-muted">
-              <img
+              <Image
                 src={hall.image}
                 alt={hall.name}
+                width={400}
+                height={225}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = '/images/halls/default-hall.jpg';
@@ -293,12 +327,14 @@ export default function AdminHallsPage() {
       </Dialog>
 
       {/* Delete Dialog */}
-      <DeleteHallDialog
-        hall={selectedHall}
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDeleteHall}
-      />
+      {selectedHall && (
+        <DeleteHallDialog
+          hall={selectedHall}
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleDeleteHall}
+        />
+      )}
     </div>
   );
 }

@@ -13,6 +13,27 @@ import { Button } from "@/components/ui/button";
 import { bookings as bookingsAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
+interface BookingApiResponse {
+  _id: string;
+  hall?: {
+    _id: string;
+    name: string;
+  };
+  hallId?: string;
+  user?: {
+    _id: string;
+    name: string;
+  };
+  userId?: string;
+  startTime: string;
+  endTime: string;
+  date?: string;
+  purpose: string;
+  status: string;
+  createdAt: string;
+  requestedAt?: string;
+}
+
 export default function AdminRequestsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -32,13 +53,13 @@ export default function AdminRequestsPage() {
         try {
           // Fetch all bookings from API instead of localStorage
           const response = await bookingsAPI.getAll();
-          const apiBookings = (response.data as any[]).map((booking: any) => ({
+          const apiBookings = (response.data as BookingApiResponse[]).map((booking: BookingApiResponse) => ({
             id: booking._id,
-            hallId: booking.hall?._id || booking.hallId,
+            hallId: booking.hall?._id || booking.hallId || '',
             hallName: booking.hall?.name || 'Unknown Hall',
-            userId: booking.user?._id || booking.userId,
+            userId: booking.user?._id || booking.userId || '',
             userName: booking.user?.name || 'Unknown User',
-            date: new Date(booking.startTime || booking.date),
+            date: new Date(booking.startTime || booking.date || new Date()),
             startTime: new Date(booking.startTime).toLocaleTimeString('en-US', {
               hour: '2-digit',
               minute: '2-digit',
@@ -50,8 +71,8 @@ export default function AdminRequestsPage() {
               hour12: false
             }),
             purpose: booking.purpose,
-            status: booking.status,
-            requestedAt: new Date(booking.createdAt || booking.requestedAt),
+            status: booking.status as 'pending' | 'approved' | 'rejected' | 'cancelled',
+            requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
           }));
 
           setBookings(apiBookings.sort((a, b) => {

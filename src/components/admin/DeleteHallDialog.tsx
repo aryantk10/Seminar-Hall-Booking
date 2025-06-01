@@ -14,8 +14,21 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Building, Users, MapPin } from 'lucide-react';
 
+interface Hall {
+  _id: string;
+  id: string;
+  name: string;
+  capacity: number;
+  location: string;
+  amenities: string[];
+  description: string;
+  image: string;
+  block: string;
+  type: string;
+}
+
 interface DeleteHallDialogProps {
-  hall: any;
+  hall: Hall;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;

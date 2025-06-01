@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { config } from '@/lib/config'
 
 interface DatabaseTest {
@@ -65,7 +65,7 @@ export default function TestDatabasePage() {
     }
   }
 
-  const runTests = async () => {
+  const runTests = useCallback(async () => {
     setLoading(true)
     try {
       // Test localhost
@@ -80,11 +80,11 @@ export default function TestDatabasePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     runTests()
-  }, [])
+  }, [runTests])
 
   const TestResult = ({ test, title }: { test: DatabaseTest | null, title: string }) => (
     <div className={`border rounded-lg p-4 ${
