@@ -3,14 +3,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { halls as hallsAPI } from '@/lib/api';
-import { Plus, Edit, Trash2, Users, MapPin, Building, BarChart3 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { HallForm } from '@/components/admin/HallForm';
 import { DeleteHallDialog } from '@/components/admin/DeleteHallDialog';
 
@@ -254,7 +251,10 @@ export default function AdminHallsPage() {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="font-bold text-blue-800 mb-2">🏗️ Create Hall</h3>
           <p className="text-blue-700 text-sm mb-4">Add new seminar halls to the system</p>
-          <Button className="w-full">
+          <Button
+            className="w-full"
+            onClick={() => setIsCreateDialogOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add New Hall
           </Button>
@@ -279,7 +279,7 @@ export default function AdminHallsPage() {
         <h2 className="text-xl font-bold text-gray-800 mb-4">📋 Hall List</h2>
         {halls.length > 0 ? (
           <div className="space-y-4">
-            {halls.map((hall, index) => (
+            {halls.map((hall) => (
               <div key={hall._id} className="bg-white border rounded-lg p-4">
                 <div className="flex justify-between items-start">
                   <div>
@@ -291,11 +291,19 @@ export default function AdminHallsPage() {
                     )}
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditDialog(hall)}
+                    >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
-                    <Button size="sm" variant="destructive">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => openDeleteDialog(hall)}
+                    >
                       <Trash2 className="h-4 w-4 mr-1" />
                       Delete
                     </Button>
@@ -308,6 +316,55 @@ export default function AdminHallsPage() {
           <p className="text-gray-600">No halls found. Create your first hall!</p>
         )}
       </div>
+
+      {/* Create Hall Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create New Hall</DialogTitle>
+            <DialogDescription>
+              Add a new seminar hall or auditorium to the system.
+            </DialogDescription>
+          </DialogHeader>
+          <HallForm onSubmit={handleCreateHall} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Hall Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Hall</DialogTitle>
+            <DialogDescription>
+              Update the hall information below.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedHall && (
+            <HallForm
+              initialData={{
+                name: selectedHall.name,
+                capacity: selectedHall.capacity,
+                location: selectedHall.location,
+                facilities: selectedHall.facilities || [],
+                description: selectedHall.description || '',
+                images: selectedHall.images || []
+              }}
+              onSubmit={handleUpdateHall}
+              isEditing={true}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Hall Dialog */}
+      {selectedHall && (
+        <DeleteHallDialog
+          hall={selectedHall}
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleDeleteHall}
+        />
+      )}
     </div>
   );
 }

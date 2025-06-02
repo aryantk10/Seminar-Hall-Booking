@@ -90,8 +90,9 @@ interface HallData {
   name: string;
   capacity: number;
   location: string;
-  amenities?: string[];
+  facilities?: string[];
   description?: string;
+  images?: string[];
 }
 
 export const halls = {

@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard/halls", icon: Building2, label: "Seminar Halls", roles: ['faculty', 'admin'], tooltip: "View Halls" },
   { href: "/dashboard/my-bookings", icon: BookMarked, label: "My Bookings", roles: ['faculty'], tooltip: "Your Bookings" },
   { href: "/dashboard/calendar", icon: CalendarDays, label: "Calendar", roles: ['faculty', 'admin'], tooltip: "Booking Calendar" },
+  { href: "/dashboard/admin/halls", icon: Settings, label: "Hall Management", roles: ['admin'], tooltip: "Manage Halls (CRUD)" },
   { href: "/dashboard/admin/requests", icon: ClipboardList, label: "Booking Requests", roles: ['admin'], tooltip: "Manage Requests" },
   { href: "/dashboard/admin/reports", icon: BarChart3, label: "Reports", roles: ['admin'], tooltip: "View Reports" },
 ];
