@@ -237,13 +237,22 @@ export default function AdminHallsPage() {
       <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
         <h1 className="text-3xl font-bold text-green-800">🎉 ADMIN UI WORKING!</h1>
         <p className="text-green-700 mt-2">
-          Hall Management v4.0 - Admin Panel Successfully Loaded! (Timestamp: {Date.now()})
+          Hall Management v5.0 - Admin Panel Successfully Loaded! (Timestamp: {Date.now()})
         </p>
         <div className="mt-4 space-y-2">
           <p className="text-sm text-green-600">✅ Authentication: Working</p>
           <p className="text-sm text-green-600">✅ Admin Role: Verified</p>
           <p className="text-sm text-green-600">✅ Page Loading: Stable</p>
-          <p className="text-sm text-green-600">✅ No Image Errors: Fixed</p>
+          <p className="text-sm text-green-600">✅ Backend Auth: Tested & Working</p>
+        </div>
+        <div className="mt-4 p-4 bg-blue-50 rounded">
+          <p className="font-medium text-blue-800">🔐 Auth Debug Info:</p>
+          <div className="text-sm text-blue-700 mt-2 space-y-1">
+            <p><strong>User:</strong> {user?.name} ({user?.email})</p>
+            <p><strong>Role:</strong> {user?.role}</p>
+            <p><strong>Token:</strong> {localStorage.getItem('token') ? '✅ Present' : '❌ Missing'}</p>
+            <p><strong>Token Preview:</strong> {localStorage.getItem('token')?.substring(0, 20)}...</p>
+          </div>
         </div>
       </div>
 

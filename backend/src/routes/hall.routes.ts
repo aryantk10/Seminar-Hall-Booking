@@ -8,7 +8,7 @@ import {
   deleteHall,
   getHallAvailability,
   populateHalls
-} from '../controllers-new/hall.controller';
+} from '../controllers/hall.controller';
 
 const router = express.Router();
 
