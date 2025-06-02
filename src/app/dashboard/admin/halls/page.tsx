@@ -253,6 +253,26 @@ export default function AdminHallsPage() {
             <p><strong>Token:</strong> {localStorage.getItem('token') ? '✅ Present' : '❌ Missing'}</p>
             <p><strong>Token Preview:</strong> {localStorage.getItem('token')?.substring(0, 20)}...</p>
           </div>
+          <div className="mt-3 flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => window.open('/debug-frontend-auth.html', '_blank')}
+            >
+              🔧 Debug Tool
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('hallHubUser');
+                window.location.href = '/login/admin';
+              }}
+            >
+              🔑 Re-authenticate
+            </Button>
+          </div>
         </div>
       </div>
 
