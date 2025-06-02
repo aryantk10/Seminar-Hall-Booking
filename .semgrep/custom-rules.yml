@@ -1,0 +1,42 @@
+rules:
+  - id: seminar-hall-booking-auth-check
+    pattern: |
+      router.$METHOD($PATH, async (req, res) => { ... })
+    message: "API endpoint missing authentication middleware"
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: mongoose-injection-check
+    patterns:
+      - pattern: |
+          $MODEL.findOne({ $FIELD: req.body.$INPUT })
+      - pattern: |
+          $MODEL.find({ $FIELD: req.body.$INPUT })
+    message: "Potential MongoDB injection vulnerability - validate input before querying"
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: booking-validation-check
+    pattern: |
+      $MODEL.create({ 
+        ...req.body
+      })
+    message: "Direct request body usage in booking creation - validate fields explicitly"
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: hall-capacity-validation
+    pattern: |
+      capacity: $VALUE
+    where:
+      $VALUE <= 0
+    message: "Invalid hall capacity value"
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: booking-date-validation
+    pattern: |
+      new Date($DATE)
+    message: "Ensure proper date validation for bookings"
+    languages: [javascript, typescript]
+    severity: WARNING 

@@ -12,7 +12,7 @@ const nextConfig = {
   
   // Image optimization
   images: {
-    domains: ['localhost', 'seminar-hall-booking-backend.onrender.com'],
+    domains: ['localhost', 'seminar-hall-booking-backend.onrender.com', 'images.unsplash.com'],
     unoptimized: true
   },
   

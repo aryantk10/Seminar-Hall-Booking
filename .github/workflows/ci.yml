@@ -99,6 +99,72 @@ jobs:
         cd backend && npm audit --audit-level=high || echo "Backend audit found issues"
       continue-on-error: true
 
+    - name: Semgrep Scan
+      uses: semgrep/semgrep-action@v1
+      env:
+        SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+      with:
+        config: >-
+          p/javascript
+          p/react
+          p/typescript
+          p/nodejs
+
+    - name: Run Snyk Security Scan (Frontend)
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --all-projects --severity-threshold=high
+
+    - name: Run Snyk Security Scan (Backend)
+      uses: snyk/actions/node@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        command: test
+        args: --file=backend/package.json --severity-threshold=high
+
+    - name: Run Snyk Container Scan
+      uses: snyk/actions/docker@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        image: ${{ env.IMAGE_NAME_FRONTEND }}
+        args: --severity-threshold=high
+
+    - name: Notify Slack on Security Issues
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: custom
+        fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+        custom_payload: |
+          {
+            "attachments": [{
+              "color": "danger",
+              "title": "Security Scan Failed 🚨",
+              "text": "Security issues found in ${{ github.repository }}",
+              "fields": [
+                {
+                  "title": "Repository",
+                  "value": "${{ github.repository }}",
+                  "short": true
+                },
+                {
+                  "title": "Branch",
+                  "value": "${{ github.ref }}",
+                  "short": true
+                }
+              ]
+            }]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   # Job 2: Unit Testing
   test:
     runs-on: ubuntu-latest
@@ -832,3 +898,59 @@ jobs:
         echo "Message: ${{ steps.status.outputs.message }}"
         echo "Build: ${{ needs.build.result }}"
         echo "Staging Deployment: ${{ needs.deploy-staging.result }}"
+
+  # Add new job for periodic security scans
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Weekly Security Scan
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Snyk Container Analysis
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: your-docker-image
+          args: --file=Dockerfile
+
+      - name: Run Semgrep Deep Scan
+        uses: semgrep/semgrep-action@v1
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        with:
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+            p/javascript
+            p/typescript
+
+      - name: Notify Slack on Weekly Scan
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: custom
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ job.status == 'success' && 'good' || 'danger' }}",
+                "title": "Weekly Security Scan ${{ job.status == 'success' && '✅' || '❌' }}",
+                "text": "Weekly security scan for ${{ github.repository }} completed",
+                "fields": [
+                  {
+                    "title": "Status",
+                    "value": "${{ job.status }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Repository",
+                    "value": "${{ github.repository }}",
+                    "short": true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

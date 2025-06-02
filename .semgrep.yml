@@ -1,0 +1,38 @@
+rules:
+  - id: jwt-hardcoded-secret
+    pattern: |
+      const $JWT_SECRET = "..."
+    message: "Hardcoded JWT secret detected"
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: potential-nosql-injection
+    pattern: |
+      $DB.collection(...).find($QUERY)
+    message: "Potential NoSQL injection detected"
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: insecure-cookie
+    patterns:
+      - pattern: |
+          $RES.cookie($NAME, $VALUE, {secure: false})
+      - pattern: |
+          $RES.cookie($NAME, $VALUE, {httpOnly: false})
+    message: "Insecure cookie settings detected"
+    languages: [javascript, typescript]
+    severity: ERROR
+
+  - id: react-xss
+    pattern: |
+      dangerouslySetInnerHTML={{__html: $HTML}}
+    message: "Potential XSS vulnerability in React component"
+    languages: [javascript, typescript]
+    severity: WARNING
+
+  - id: env-var-exposure
+    pattern: |
+      console.log(process.env.$VAR)
+    message: "Environment variable potentially exposed through logging"
+    languages: [javascript, typescript]
+    severity: WARNING 

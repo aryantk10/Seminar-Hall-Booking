@@ -1,0 +1,29 @@
+# Snyk (https://snyk.io) policy file
+version: v1.25.0
+
+# Ignore specific vulnerabilities
+ignore:
+  'npm:node-fetch:20220206':
+    - '*':
+        reason: 'No direct fix available, using latest compatible version'
+        expires: 2024-12-31T00:00:00.000Z
+
+# Exclude test files and build artifacts
+exclude:
+  global:
+    - node_modules
+    - dist
+    - build
+    - .next
+    - coverage
+    - '**/*.test.js'
+    - '**/*.spec.js'
+    - '**/__tests__/*'
+
+# Patch vulnerabilities when possible
+patch: {}
+
+# Custom severity thresholds
+failThreshold:
+  high: 10
+  medium: 20 

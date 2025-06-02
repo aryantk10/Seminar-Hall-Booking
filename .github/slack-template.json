@@ -1,0 +1,54 @@
+{
+  "attachments": [
+    {
+      "color": "${color}",
+      "blocks": [
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "${title}",
+            "emoji": true
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Repository:*\n${repository}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Branch:*\n${branch}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Status:*\n${status}"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Triggered by:*\n${actor}"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Details:*\n${details}"
+          }
+        },
+        {
+          "type": "context",
+          "elements": [
+            {
+              "type": "mrkdwn",
+              "text": "Workflow: ${workflow} | Job: ${job} | Duration: ${took}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+} 

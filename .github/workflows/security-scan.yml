@@ -1,0 +1,107 @@
+name: Weekly Security Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run every Sunday at midnight
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    name: Security Audit
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd backend && npm ci
+
+      - name: Run npm audit
+        run: |
+          echo "Running npm audit for frontend..."
+          npm audit
+          echo "Running npm audit for backend..."
+          cd backend && npm audit
+
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=high
+
+      - name: Run Semgrep Scan
+        uses: semgrep/semgrep-action@v1
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        with:
+          config: >-
+            p/security-audit
+            p/owasp-top-ten
+            p/javascript
+            p/typescript
+            p/react
+            p/nodejs
+            .semgrep/custom-rules.yml
+
+      - name: Run OWASP ZAP Scan
+        uses: zaproxy/action-full-scan@v0.9.0
+        with:
+          target: 'https://seminar-hall-booking.onrender.com'
+          allow_issue_writing: true
+
+      - name: Generate Security Report
+        run: |
+          echo "# Security Scan Report" > security-report.md
+          echo "## Scan Date: $(date)" >> security-report.md
+          echo "## Repository: ${{ github.repository }}" >> security-report.md
+          echo "## Branch: ${{ github.ref }}" >> security-report.md
+          echo "## Results" >> security-report.md
+          echo "### npm audit results" >> security-report.md
+          npm audit --json || true >> security-report.md
+          echo "### Snyk scan results" >> security-report.md
+          cat .snyk-results.json || true >> security-report.md
+
+      - name: Create Issue
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: Weekly Security Scan Report
+          content-filepath: security-report.md
+          labels: security, automated-scan
+
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        if: always()
+        with:
+          status: custom
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ job.status == 'success' && 'good' || 'danger' }}",
+                "title": "Weekly Security Scan Complete ${{ job.status == 'success' && '✅' || '❌' }}",
+                "text": "Security scan for ${{ github.repository }} completed with status: ${{ job.status }}",
+                "fields": [
+                  {
+                    "title": "Repository",
+                    "value": "${{ github.repository }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.ref }}",
+                    "short": true
+                  }
+                ]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
