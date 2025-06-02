@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const auth_middleware_1 = require("../middleware/auth.middleware");
-const hall_controller_1 = require("../controllers-new/hall.controller");
+const hall_controller_1 = require("../controllers/hall.controller");
 const router = express_1.default.Router();
 // Public routes
 router.get('/', hall_controller_1.getHalls);
