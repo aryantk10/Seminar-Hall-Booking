@@ -1,5 +1,5 @@
-# Simple single-stage build for backend
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package files
@@ -11,11 +11,21 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Set environment variables
-ENV NODE_ENV=production
-
 # Build the application
 RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install production dependencies only
+RUN npm ci --production
+
+# Copy built files from builder stage
+COPY --from=builder /app/dist ./dist
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -25,8 +35,11 @@ RUN adduser --system --uid 1001 backend
 RUN chown -R backend:nodejs /app
 USER backend
 
+# Set environment variables
+ENV NODE_ENV=production
+
 # Expose port
 EXPOSE 5000
 
 # Start production server
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/app.js"]

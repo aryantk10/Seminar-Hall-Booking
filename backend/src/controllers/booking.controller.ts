@@ -2,6 +2,12 @@ import { Request, Response } from 'express';
 import Booking, { IBooking } from '../models/booking.model';
 import Hall from '../models/hall.model';
 import User from '../models/user.model';
+import { 
+    bookingCounter, 
+    activeBookingsGauge, 
+    hallUtilizationGauge,
+    bookingDurationHistogram 
+} from '../middleware/metrics';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -26,6 +32,63 @@ const checkBookingConflict = async (hallId: string, startTime: Date, endTime: Da
 
   const conflictingBooking = await Booking.findOne(conflictQuery);
   return conflictingBooking;
+};
+
+// Helper function to update metrics
+const updateBookingMetrics = async (hallId: string) => {
+    try {
+        const hall = await Hall.findById(hallId);
+        if (!hall) return;
+
+        // Count active bookings for this hall
+        const activeBookings = await Booking.countDocuments({
+            hallId,
+            status: 'approved',
+            startTime: { $lte: new Date() },
+            endTime: { $gt: new Date() }
+        });
+
+        // Update active bookings gauge
+        activeBookingsGauge.set({ hall_name: hall.name }, activeBookings);
+
+        // Calculate utilization rate (bookings for next 7 days)
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        
+        const totalBookingHours = await Booking.aggregate([
+            {
+                $match: {
+                    hallId: hallId,
+                    status: 'approved',
+                    startTime: { $gte: new Date() },
+                    endTime: { $lte: nextWeek }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalHours: {
+                        $sum: {
+                            $divide: [
+                                { $subtract: ['$endTime', '$startTime'] },
+                                3600000 // Convert ms to hours
+                            ]
+                        }
+                    }
+                }
+            }
+        ]);
+
+        const totalPossibleHours = 24 * 7; // 24 hours * 7 days
+        const utilizationRate = totalBookingHours.length > 0 
+            ? (totalBookingHours[0].totalHours / totalPossibleHours) * 100 
+            : 0;
+
+        // Update utilization gauge
+        hallUtilizationGauge.set({ hall_name: hall.name }, utilizationRate);
+    } catch (error) {
+        console.error('Error updating metrics:', error);
+    }
 };
 
 export const createBooking = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -120,6 +183,17 @@ export const createBooking = async (req: AuthRequest, res: Response): Promise<vo
       .populate('user', 'name email');
 
     console.log('📤 Sending response with populated booking');
+
+    // Increment booking counter
+    bookingCounter.inc({ status: booking.status, hall_name: hall?.name || 'unknown' });
+
+    // Calculate and record booking duration
+    const durationHours = (booking.endTime.getTime() - booking.startTime.getTime()) / (1000 * 60 * 60);
+    bookingDurationHistogram.observe({ hall_name: hall?.name || 'unknown' }, durationHours);
+
+    // Update other metrics
+    await updateBookingMetrics(hall._id.toString());
+
     res.status(201).json(populatedBooking);
   } catch (error) {
     console.error('❌ Booking creation error:', error);
@@ -239,6 +313,13 @@ export const updateBooking = async (req: AuthRequest, res: Response): Promise<vo
       res.status(404).json({ message: 'Booking not found' });
       return;
     }
+
+    // Increment counter for new status
+    const hall = await Hall.findById(booking.hall);
+    bookingCounter.inc({ status: booking.status, hall_name: hall?.name || 'unknown' });
+
+    // Update other metrics
+    await updateBookingMetrics(booking.hall.toString());
 
     res.json(booking);
   } catch (error) {

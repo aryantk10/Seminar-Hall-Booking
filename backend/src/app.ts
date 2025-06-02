@@ -4,11 +4,15 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import './services/cron.service';
+import { metricsMiddleware } from './middleware/metrics';
+import { metricsService } from './services/metrics.service';
 
 // Routes
 import authRoutes from './routes/auth.routes';
 import hallRoutes from './routes/hall.routes';
 import bookingRoutes from './routes/booking.routes';
+import { errorHandler } from './middleware/error';
+import { auth } from './middleware/auth';
 
 dotenv.config();
 
@@ -36,6 +40,9 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Add metrics middleware before other middleware
+app.use(metricsMiddleware as unknown as express.RequestHandler);
+
 // Health check route
 app.get('/', (req: Request, res: Response) => {
   res.json({
@@ -46,11 +53,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 app.get('/health', (req: Request, res: Response) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+  res.status(200).json({ status: 'ok' });
 });
 
 // Debug route to test API
@@ -85,17 +88,14 @@ try {
 
 console.log('Registering booking routes...');
 try {
-  app.use('/api/bookings', bookingRoutes);
+  app.use('/api/bookings', auth, bookingRoutes);
   console.log('✅ Booking routes registered successfully');
 } catch (error) {
   console.error('❌ Error registering booking routes:', error);
 }
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+app.use(errorHandler);
 
 // MongoDB connection
 const connectDB = async () => {
@@ -105,6 +105,8 @@ const connectDB = async () => {
     await mongoose.connect(mongoURI);
     console.log('MongoDB connected successfully');
     console.log('Database name:', mongoose.connection.db.databaseName);
+    // Initialize metrics after database connection
+    await metricsService.initializeMetrics();
   } catch (error) {
     console.error('MongoDB connection error:', error);
     process.exit(1);
