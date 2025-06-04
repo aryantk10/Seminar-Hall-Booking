@@ -21,6 +21,16 @@ interface ApiError {
   message?: string;
 }
 
+interface BackendHall {
+  _id: string;
+  frontendId: string;
+  name: string;
+  location: string;
+  capacity: number;
+  facilities: string[];
+  images?: string[];
+}
+
 interface HallFormData {
   name: string;
   capacity: number | string;
@@ -79,14 +89,13 @@ export default function AdminHallsPage() {
 
   const handleCreateHall = async (hallData: HallFormData) => {
     try {
-      console.log('🏗️ Creating new hall:', hallData);
+      console.log('📝 Creating new hall:', hallData);
       const processedData = {
         ...hallData,
         capacity: typeof hallData.capacity === 'string' ? parseInt(hallData.capacity) : hallData.capacity
       };
       const response = await hallsAPI.create(processedData);
-      const backendHall = response.data;
-      console.log('✅ Hall created successfully:', backendHall);
+      const backendHall = response.data as BackendHall;
 
       // Convert the response data to match frontend Hall type
       const newHall: Hall = {

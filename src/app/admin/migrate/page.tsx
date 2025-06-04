@@ -4,15 +4,22 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { halls } from "@/lib/api";
 
+interface MigrationResponse {
+  updatedCount: number;
+  totalHalls: number;
+}
+
 export default function MigratePage() {
   const { toast } = useToast();
 
   const handleMigrate = async () => {
     try {
       const response = await halls.migrateHallsFrontendIds();
+      const migrationData = response.data as MigrationResponse;
+      
       toast({
         title: "Migration Successful",
-        description: `Successfully migrated halls: ${response.data.updatedCount} updated out of ${response.data.totalHalls} total halls.`,
+        description: `Successfully migrated halls: ${migrationData.updatedCount} updated out of ${migrationData.totalHalls} total halls.`,
       });
     } catch (error: any) {
       toast({
