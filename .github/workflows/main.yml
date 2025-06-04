@@ -1,0 +1,112 @@
+name: Seminar Hall Booking CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+        
+    - name: Install Dependencies (Frontend)
+      working-directory: ./frontend
+      run: npm install
+        
+    - name: Install Dependencies (Backend)
+      working-directory: ./backend
+      run: npm install
+        
+    - name: Run Linting
+      run: |
+        cd frontend && npm run lint
+        cd ../backend && npm run lint
+        
+    - name: Run Tests
+      run: |
+        cd frontend && npm test
+        cd ../backend && npm test
+        
+    - name: Build Frontend
+      working-directory: ./frontend
+      run: npm run build
+        
+    - name: Build Backend
+      working-directory: ./backend
+      run: npm run build
+        
+    - name: Build and Push Docker Images
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        
+        # Build and push frontend
+        docker build -t aryantk10/seminar-hall-booking-frontend:latest ./frontend
+        docker push aryantk10/seminar-hall-booking-frontend:latest
+        
+        # Build and push backend
+        docker build -t aryantk10/seminar-hall-booking-backend:latest ./backend
+        docker push aryantk10/seminar-hall-booking-backend:latest
+        
+        # Build and push monitoring
+        docker build -t aryantk10/seminar-hall-booking-monitoring:latest ./monitoring
+        docker push aryantk10/seminar-hall-booking-monitoring:latest
+
+    - name: Security Scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --severity-threshold=high
+
+  deploy:
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to Production Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USERNAME }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          cd /path/to/seminar-hall-booking
+          docker-compose pull
+          docker-compose up -d
+          
+    - name: Health Check
+      run: |
+        # Wait for services to be up
+        sleep 30
+        
+        # Check frontend
+        curl --fail http://${{ secrets.DEPLOY_HOST }}:9002 || exit 1
+        
+        # Check backend
+        curl --fail http://${{ secrets.DEPLOY_HOST }}:5000/health || exit 1
+        
+        # Check Grafana
+        curl --fail http://${{ secrets.DEPLOY_HOST }}:3000 || exit 1
+        
+        # Check Prometheus
+        curl --fail http://${{ secrets.DEPLOY_HOST }}:9090/-/healthy || exit 1
+
+    - name: Notify on Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always() 

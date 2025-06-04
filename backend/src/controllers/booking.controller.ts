@@ -93,111 +93,37 @@ const updateBookingMetrics = async (hallId: string) => {
 
 export const createBooking = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { hallId, startDate, endDate, purpose, attendees, requirements } = req.body;
+    const { hall: hallId, startTime, endTime } = req.body;
 
-    console.log('🎯 Booking request received:', { hallId, startDate, endDate, purpose });
-    console.log('🔧 DEPLOYMENT TEST - Using Test Hall mapping for all halls');
-
-    // Map frontend hall IDs to actual database hall names
-    const hallMapping: Record<string, string> = {
-      // Full hall IDs (correct format) - map to actual database hall names
-      'apex-auditorium': 'APEX Auditorium',
-      'esb-hall-1': 'ESB Seminar Hall - I',
-      'esb-hall-2': 'ESB Seminar Hall - II',
-      'esb-hall-3': 'ESB Seminar Hall - III',
-      'des-hall-1': 'DES Seminar Hall - I',
-      'des-hall-2': 'DES Seminar Hall - II',
-      'lhc-hall-1': 'LHC Seminar Hall - I',
-      'lhc-hall-2': 'LHC Seminar Hall - II',
-
-      // Short hall IDs (for backward compatibility)
-      'apex': 'APEX Auditorium',
-      'esb1': 'ESB Seminar Hall - I',
-      'esb2': 'ESB Seminar Hall - II',
-      'esb3': 'ESB Seminar Hall - III',
-      'des1': 'DES Seminar Hall - I',
-      'des2': 'DES Seminar Hall - II',
-      'lhc1': 'LHC Seminar Hall - I',
-      'lhc2': 'LHC Seminar Hall - II'
-    };
-
-    const hallName = hallMapping[hallId] || hallId;
-    console.log('🏢 Looking for hall:', { hallId, mappedName: hallName });
-
-    const hall = await Hall.findOne({ name: hallName });
+    // Check if hall exists - try both _id and frontendId
+    let hall = await Hall.findById(hallId);
     if (!hall) {
-      console.log('❌ Hall not found in database:', hallName);
-      console.log('📋 Available halls:', await Hall.find({}, 'name').lean());
-      res.status(404).json({ message: `Hall not found: ${hallName}` });
+      hall = await Hall.findOne({ frontendId: hallId });
+    }
+
+    if (!hall) {
+      res.status(404).json({ message: 'Hall not found' });
       return;
     }
 
-    console.log('✅ Hall found:', { id: hall._id, name: hall.name });
-
-    // Parse dates and extract time from requirements
-    const startTime = new Date(startDate);
-    const endTime = new Date(endDate);
-
-    // Extract time from requirements if provided
-    if (requirements && typeof requirements === 'string' && requirements.includes('Time:')) {
-      const timeMatch = requirements.match(/Time:\s*(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-      if (timeMatch) {
-        const [, startTimeStr, endTimeStr] = timeMatch;
-        const [startHour, startMin] = startTimeStr.split(':').map(Number);
-        const [endHour, endMin] = endTimeStr.split(':').map(Number);
-
-        startTime.setHours(startHour, startMin, 0, 0);
-        endTime.setHours(endHour, endMin, 0, 0);
-        console.log('⏰ Time extracted from requirements:', { startTime, endTime });
-      }
-    }
-
-    console.log('📅 Final booking times:', { startTime, endTime });
-
     // Check for conflicts
-    const conflict = await checkBookingConflict(hall._id.toString(), startTime, endTime);
+    const conflict = await checkBookingConflict(hall._id, new Date(startTime), new Date(endTime));
     if (conflict) {
-      console.log('⚠️ Booking conflict detected:', conflict);
       res.status(400).json({ message: 'Hall is already booked for this time slot' });
       return;
     }
 
-    console.log('✅ No conflicts found, creating booking...');
-
     const booking = await Booking.create({
-      hall: hall._id,
+      ...req.body,
+      hall: hall._id, // Use the MongoDB _id for the booking
       user: req.user._id,
-      startTime,
-      endTime,
-      purpose,
-      attendees: attendees || 1,
-      requirements: requirements ? [requirements] : [],
       status: 'pending',
     });
 
-    console.log('🎉 Booking created successfully:', booking._id);
-
-    // Populate the response
-    const populatedBooking = await Booking.findById(booking._id)
-      .populate('hall', 'name location')
-      .populate('user', 'name email');
-
-    console.log('📤 Sending response with populated booking');
-
-    // Increment booking counter
-    bookingCounter.inc({ status: booking.status, hall_name: hall?.name || 'unknown' });
-
-    // Calculate and record booking duration
-    const durationHours = (booking.endTime.getTime() - booking.startTime.getTime()) / (1000 * 60 * 60);
-    bookingDurationHistogram.observe({ hall_name: hall?.name || 'unknown' }, durationHours);
-
-    // Update other metrics
-    await updateBookingMetrics(hall._id.toString());
-
-    res.status(201).json(populatedBooking);
+    res.status(201).json(booking);
   } catch (error) {
-    console.error('❌ Booking creation error:', error);
-    res.status(500).json({ message: 'Server error', error: error instanceof Error ? error.message : 'Unknown error' });
+    console.error('❌ Error creating booking:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

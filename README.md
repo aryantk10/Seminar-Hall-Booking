@@ -1,233 +1,209 @@
-﻿# 🏛️ Seminar Hall Booking System - Admin UI Ready
+﻿# 🏛️ Seminar Hall Booking System
 
-A comprehensive web application for managing seminar hall bookings with role-based access control, built with Next.js, Node.js, and MongoDB.
-
-## ✨ Latest Features
-- ✅ **Admin Hall Management**: Create, Edit, Delete Halls
-- ✅ **Statistics Dashboard**: Real-time metrics and analytics
-- ✅ **Enhanced UI/UX**: Modern interface with tooltips and confirmations
-
-## 🚀 **Enterprise CI/CD Pipeline Status**
-
-This project features a **world-class, enterprise-grade CI/CD pipeline** with:
-
-✅ **Complete Testing Strategy**: Unit + Integration + E2E + Performance + Security
-✅ **Advanced Security**: CodeQL + Semgrep + Snyk SAST scanning
-✅ **Professional Artifacts**: Versioned builds with SBOM
-✅ **Cloud Deployment**: Multi-environment with AWS/K8s support
-✅ **Comprehensive Monitoring**: Real-time notifications and health checks
-
-**Pipeline Execution Triggered**: $(date +"%Y-%m-%d %H:%M:%S UTC")
-
-🔒 **Snyk Security Scanning**: Now ACTIVE with API token configured!
-🧪 **Testing Snyk Integration**: Pipeline triggered to verify Snyk scanning works
-💬 **Slack Notifications**: Enhanced with rich formatting and comprehensive status updates
-🌐 **E2E Tests**: Real application pages created for Cypress testing
-🚀 **Performance Tests**: Artillery configured for existing endpoints
-☁️ **AWS Deployment**: Graceful simulation when credentials not provided
-
-## 🚀 Features
-
-- **User Management**: Faculty and Admin role-based authentication
-- **Hall Management**: Add, edit, and manage seminar halls
-- **Booking System**: Real-time booking with conflict detection
-- **Dashboard**: Interactive calendar and booking overview
-- **Responsive Design**: Mobile-friendly interface
-- **Docker Support**: Fully containerized application
-- **CI/CD Pipeline**: Automated testing and deployment
-
-## 🛠️ Tech Stack
-
-### Frontend
-- **Next.js 15** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **Lucide React** - Modern icons
-
-### Backend
-- **Node.js** - Runtime environment
-- **Express.js** - Web framework
-- **TypeScript** - Type-safe backend
-- **MongoDB** - Database with Mongoose ODM
-- **JWT** - Authentication tokens
-- **bcrypt** - Password hashing
-
-### DevOps
-- **Docker** - Containerization
-- **GitHub Actions** - CI/CD pipeline
-- **Nginx** - Reverse proxy and load balancing
-- **MongoDB Atlas** - Cloud database
+A modern web application for managing and booking seminar halls and auditoriums.
 
 ## 📋 Prerequisites
 
-- Node.js 18+ and npm
-- Docker and Docker Compose
-- MongoDB Atlas account
-- Git
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
+1. **Node.js (v16 or higher)**
+   - Download from [official Node.js website](https://nodejs.org/)
+   - Verify installation:
 ```bash
-git clone https://github.com/your-username/seminar-hall-booking.git
-cd seminar-hall-booking
-```
+     node --version
+     npm --version
+     ```
 
-### 2. Environment Setup
+2. **MongoDB**
+   - **Option A: MongoDB Atlas (Recommended)**
+     - Already configured and connected to: `mongodb+srv://cluster0.mongodb.net`
+     - No additional setup needed as the application uses the production database
+   
+   - **Option B: Local MongoDB (For Development)**
+     - Download [MongoDB Community Server](https://www.mongodb.com/try/download/community)
+     - Start MongoDB service:
 ```bash
-# Copy environment template
-cp .env.example .env
+       # Windows
+       net start MongoDB
+       
+       # macOS
+       brew services start mongodb-community
+       
+       # Linux
+       sudo systemctl start mongod
+       ```
 
-# Edit .env with your MongoDB Atlas credentials
-# Update MONGODB_URI, JWT_SECRET, etc.
-```
+3. **Git**
+   - Download from [git-scm.com](https://git-scm.com/)
+   - Verify installation: `git --version`
 
-### 3. Development with Docker
+## 🚀 Installation Steps
+
+1. **Clone the Repository**
 ```bash
-# Start development environment
-docker-compose -f docker-compose.dev.yml up
+   git clone <your-repository-url>
+   cd Seminar-Hall-Booking
+   ```
 
-# Or use the helper script
-./docker-scripts/run-dev.ps1
-```
-
-### 4. Manual Development Setup
+2. **Backend Setup**
 ```bash
-# Install frontend dependencies
+   # Navigate to backend directory
+   cd backend
+
+   # Install dependencies
 npm install
 
-# Install backend dependencies
-cd backend && npm install
+   # Create .env file (for local development)
+   echo "PORT=5000
+   MONGODB_URI=mongodb+srv://your_mongodb_uri
+   JWT_SECRET=your_jwt_secret
+   NODE_ENV=development" > .env
 
-# Start backend (in backend directory)
-npm run dev
-
-# Start frontend (in root directory)
+   # Start the backend server
 npm run dev
 ```
 
-## 🐳 Docker Commands
-
+3. **Frontend Setup**
 ```bash
-# Development
-docker-compose -f docker-compose.dev.yml up --build
+   # Open a new terminal and navigate to project root
+   cd Seminar-Hall-Booking
 
-# Production
-docker-compose -f docker-compose.prod.yml up -d
+   # Install dependencies
+   npm install
 
-# Build images
-docker build -t seminar-hall-frontend .
-docker build -t seminar-hall-backend ./backend
+   # Create .env.local file
+   echo "NEXT_PUBLIC_API_URL=https://seminar-hall-booking-backend.onrender.com/api
+   NEXT_PUBLIC_URL=http://localhost:3000" > .env.local
 
-# View logs
-docker-compose logs -f [service-name]
+   # Start the development server
+   npm run dev
 ```
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://...` |
-| `JWT_SECRET` | JWT signing secret | `your-secret-key` |
-| `NEXT_PUBLIC_API_URL` | Frontend API URL | `http://localhost:5000/api` |
-| `NODE_ENV` | Environment mode | `development/production` |
+1. **Backend (.env)**
+   ```env
+   PORT=5000
+   MONGODB_URI=mongodb+srv://your_mongodb_uri
+   JWT_SECRET=your_jwt_secret
+   NODE_ENV=development
+   ```
 
-### Default Credentials
+2. **Frontend (.env.local)**
+   ```env
+   NEXT_PUBLIC_API_URL=https://seminar-hall-booking-backend.onrender.com/api
+   NEXT_PUBLIC_URL=http://localhost:3000
+   ```
 
-For testing purposes:
-- **Faculty**: `atlas@faculty.com` / `atlas123`
-- **Admin**: `atlas@admin.com` / `atlas123`
+### Perfect Sync Configuration
 
-## 📊 API Endpoints
+The application uses a "Perfect Sync" configuration where all environments (development, staging, production) use the same backend and database for consistent data:
 
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/profile` - Get user profile
+- **Frontend URLs**:
+  - Development: `http://localhost:3000`
+  - Production: `https://seminar-hall-booking-psi.vercel.app`
 
-### Halls
-- `GET /api/halls` - List all halls
-- `POST /api/halls` - Create new hall (Admin only)
-- `PUT /api/halls/:id` - Update hall (Admin only)
-- `DELETE /api/halls/:id` - Delete hall (Admin only)
+- **Backend URL**:
+  - All environments: `https://seminar-hall-booking-backend.onrender.com/api`
 
-### Bookings
-- `GET /api/bookings` - List user bookings
-- `POST /api/bookings` - Create new booking
-- `PUT /api/bookings/:id` - Update booking
-- `DELETE /api/bookings/:id` - Cancel booking
+- **Database**:
+  - All environments: MongoDB Atlas Cluster
+
+## 🏃‍♂️ Running the Application
+
+1. **Start Backend Server**
+   ```bash
+   cd backend
+   npm run dev
+   ```
+
+2. **Start Frontend Development Server**
+   ```bash
+   # In a new terminal
+   npm run dev
+   ```
+
+3. **Access the Application**
+   - Frontend: `http://localhost:3000`
+   - Backend API: `http://localhost:5000`
 
 ## 🧪 Testing
 
+1. **Backend API Test**
 ```bash
-# Run frontend tests
+   cd backend
 npm test
+   ```
 
-# Run backend tests
-cd backend && npm test
-
-# Run linting
-npm run lint
-```
-
-## 🚀 Deployment
-
-### GitHub Actions CI/CD
-
-1. **Push to GitHub** triggers automated pipeline
-2. **Tests** run on every push/PR
-3. **Docker images** built and pushed to GitHub Container Registry
-4. **Deployment** to production environment
-
-### Manual Deployment
-
+2. **Frontend Test**
 ```bash
-# Build production images
-docker-compose -f docker-compose.prod.yml build
+   npm test
+   ```
 
-# Deploy to production
-docker-compose -f docker-compose.prod.yml up -d
-```
+## 🔍 Troubleshooting
 
-## 📁 Project Structure
+### Common Issues and Solutions
 
-```
-├── src/                    # Frontend source code
-│   ├── app/               # Next.js App Router pages
-│   ├── components/        # Reusable components
-│   ├── lib/              # Utilities and API client
-│   └── types/            # TypeScript type definitions
-├── backend/               # Backend source code
-│   ├── src/              # Backend source files
-│   ├── Dockerfile        # Backend container config
-│   └── package.json      # Backend dependencies
-├── .github/workflows/     # CI/CD pipeline
-├── docker-scripts/        # Docker helper scripts
-├── Dockerfile            # Frontend container config
-├── docker-compose.*.yml  # Container orchestration
-└── nginx.conf            # Reverse proxy config
-```
+1. **Port Already in Use**
+   ```bash
+   # Check what's using the port
+   netstat -ano | findstr :3000  # Windows
+   lsof -i :3000                 # macOS/Linux
+
+   # Kill the process
+   taskkill /PID <PID> /F       # Windows
+   kill -9 <PID>                # macOS/Linux
+   ```
+
+2. **Node Modules Issues**
+   ```bash
+   # Clear npm cache and reinstall
+   npm cache clean --force
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+3. **MongoDB Connection Issues**
+   - Verify MongoDB service is running
+   - Check connection string in .env file
+   - Ensure network access is configured in MongoDB Atlas
+
+4. **API Connection Issues**
+   - Check if backend server is running
+   - Verify API URL in frontend .env.local
+   - Check browser console for CORS errors
+
+## 📚 Additional Resources
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [MongoDB Atlas Documentation](https://docs.atlas.mongodb.com/)
+- [Render Platform Documentation](https://render.com/docs)
+
+## 🔐 Security Notes
+
+1. **Environment Variables**
+   - Never commit .env or .env.local files
+   - Use strong JWT secrets
+   - Regularly rotate production secrets
+
+2. **Database Security**
+   - Use strong MongoDB Atlas passwords
+   - Configure IP whitelist in MongoDB Atlas
+   - Enable database auditing
+
+3. **API Security**
+   - All endpoints require authentication except public routes
+   - JWT tokens expire after 24 hours
+   - Rate limiting is enabled on all routes
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support, email support@seminarhall.com or create an issue on GitHub.
-
-## 🙏 Acknowledgments
-
-- MongoDB Atlas for cloud database hosting
-- GitHub for CI/CD and container registry
-- Docker for containerization platform
+This project is licensed under the MIT License - see the LICENSE file for details.

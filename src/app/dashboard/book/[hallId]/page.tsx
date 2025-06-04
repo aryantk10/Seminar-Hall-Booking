@@ -1,4 +1,3 @@
-
 "use client";
 import BookingForm from "@/components/booking/BookingForm";
 import { halls as defaultAllHalls, allPossibleAmenities } from "@/lib/data";
@@ -12,7 +11,7 @@ import { useEffect, useState, use } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { bookings as bookingsAPI } from "@/lib/api";
+import { bookings as bookingsAPI, halls as hallsAPI } from "@/lib/api";
 import { getBookingTime } from "@/lib/time-utils";
 
 interface PageRouteParams {
@@ -35,9 +34,13 @@ interface BookingApiResponse {
   endTime: string;
   date?: string;
   purpose: string;
-  status: string;
+  status: "pending" | "approved" | "rejected" | "cancelled";
   createdAt: string;
   requestedAt?: string;
+}
+
+interface ApiResponse<T> {
+  data: T;
 }
 
 interface ApiError {
@@ -64,65 +67,84 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
   // This state will hold all halls, sourced from localStorage or default data
   const [configuredHallsData, setConfiguredHallsData] = useState<Hall[]>(defaultAllHalls);
 
-
   useEffect(() => {
     const fetchHallAndBookings = async () => {
-      // Load configured halls (keep localStorage for hall configuration)
-      let currentHalls: Hall[];
-      const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
-      if (storedHallsString) {
-        currentHalls = JSON.parse(storedHallsString) as Hall[];
-      } else {
-        currentHalls = defaultAllHalls;
-        localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultAllHalls));
-      }
-      setConfiguredHallsData(currentHalls);
-
-      const foundHall = currentHalls.find((h) => h.id === hallId);
-      if (foundHall) {
-        setHall(foundHall);
-      }
-
-      // Try to fetch approved bookings for conflict checking, fallback to user bookings
       try {
-        let response;
+        if (!hallId) {
+          console.error('No hallId provided');
+          toast({
+            title: "Error",
+            description: "No hall ID provided. Please try again.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        // First try to fetch the hall directly from the API
+        const hallResponse = await hallsAPI.getById(hallId);
+        if (!hallResponse?.data) {
+          throw new Error('Hall not found');
+        }
+        const fetchedHall = hallResponse.data;
+        setHall(fetchedHall);
+
+        // Try to fetch approved bookings for conflict checking, fallback to user bookings
         try {
           console.log('🚀 Trying to fetch approved bookings for conflict checking...');
-          response = await bookingsAPI.getApproved();
-          console.log('✅ Successfully fetched approved bookings:', response.data?.length || 0);
+          const response = await bookingsAPI.getApproved();
+          const bookingsData = response.data as BookingApiResponse[];
+          console.log('✅ Successfully fetched approved bookings:', bookingsData.length);
+
+          const apiBookings = bookingsData.map((booking: BookingApiResponse) => ({
+            id: booking._id,
+            hallId: booking.hall?._id || booking.hallId || '',
+            hallName: booking.hall?.name || 'Unknown Hall',
+            userId: booking.user?._id || booking.userId || '',
+            userName: booking.user?.name || 'Unknown User',
+            date: new Date(booking.startTime || booking.date || new Date()),
+            startTime: getBookingTime(booking.startTime),
+            endTime: getBookingTime(booking.endTime),
+            purpose: booking.purpose,
+            status: booking.status,
+            requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
+          }));
+
+          setBookings(apiBookings);
         } catch (error: unknown) {
           const apiError = error as ApiError;
           console.log('❌ Approved bookings endpoint failed:', apiError.response?.status);
           console.log('🔄 Falling back to user bookings for conflict checking...');
-          response = await bookingsAPI.getMyBookings();
-          console.log('✅ Successfully fetched user bookings:', response.data?.length || 0);
+          const response = await bookingsAPI.getMyBookings();
+          const bookingsData = response.data as BookingApiResponse[];
+          console.log('✅ Successfully fetched user bookings:', bookingsData.length);
+
+          const apiBookings = bookingsData.map((booking: BookingApiResponse) => ({
+            id: booking._id,
+            hallId: booking.hall?._id || booking.hallId || '',
+            hallName: booking.hall?.name || 'Unknown Hall',
+            userId: booking.user?._id || booking.userId || '',
+            userName: booking.user?.name || 'Unknown User',
+            date: new Date(booking.startTime || booking.date || new Date()),
+            startTime: getBookingTime(booking.startTime),
+            endTime: getBookingTime(booking.endTime),
+            purpose: booking.purpose,
+            status: booking.status,
+            requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
+          }));
+
+          setBookings(apiBookings);
         }
-
-        const apiBookings = response.data.map((booking: BookingApiResponse) => ({
-          id: booking._id,
-          hallId: booking.hall?._id || booking.hallId || '',
-          hallName: booking.hall?.name || 'Unknown Hall',
-          userId: booking.user?._id || booking.userId || '',
-          userName: booking.user?.name || 'Unknown User',
-          date: new Date(booking.startTime || booking.date || new Date()),
-          startTime: getBookingTime(booking.startTime),
-          endTime: getBookingTime(booking.endTime),
-          purpose: booking.purpose,
-          status: booking.status,
-          requestedAt: new Date(booking.createdAt || booking.requestedAt || new Date()),
-        }));
-
-        setBookings(apiBookings);
       } catch (error) {
-        console.error('Failed to fetch bookings for hall:', error);
+        console.error('Failed to fetch hall or bookings:', error);
         toast({
           title: "Error",
-          description: "Failed to load existing bookings. Please try again.",
+          description: "Failed to load hall details or bookings. Please try again.",
           variant: "destructive",
         });
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchHallAndBookings();
@@ -152,9 +174,12 @@ export default function BookHallPage({ params: paramsPromise }: { params: Promis
     });
   };
 
-
   if (loading) {
     return <div className="flex items-center justify-center h-full"><p>Loading hall details...</p></div>;
+  }
+
+  if (!hallId) {
+    return <div className="text-center py-10"><p>No hall ID provided.</p> <Link href="/dashboard/halls" className="text-primary hover:underline">Go back to halls list</Link></div>;
   }
 
   if (!hall) {

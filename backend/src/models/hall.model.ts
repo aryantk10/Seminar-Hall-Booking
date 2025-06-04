@@ -8,6 +8,7 @@ export interface IHall extends Document {
   description?: string;
   isAvailable: boolean;
   images?: string[];
+  frontendId: string;
 }
 
 const hallSchema = new Schema<IHall>({
@@ -43,6 +44,12 @@ const hallSchema = new Schema<IHall>({
     type: String,
     trim: true,
   }],
+  frontendId: {
+    type: String,
+    trim: true,
+    unique: true,
+    required: true,
+  }
 }, {
   timestamps: true,
 });

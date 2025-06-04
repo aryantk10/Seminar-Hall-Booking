@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-// Official Institute Hall Details
+// Hall interface
 interface Hall {
   id: string;
   name: string;
@@ -14,110 +14,61 @@ interface Hall {
   pricePerHour: number;
 }
 
-type HallId = 'apex-auditorium' | 'esb-hall-1' | 'esb-hall-2' | 'esb-hall-3' | 'des-hall-1' | 'des-hall-2' | 'lhc-hall-1' | 'lhc-hall-2';
+async function getHallDetails(id: string): Promise<Hall> {
+  try {
+    const response = await fetch(`/api/halls/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store' // Disable caching to always get fresh data
+    });
 
-const getHallDetails = (id: string): Hall => {
-  const halls: Record<HallId, Hall> = {
-    // Auditorium
-    'apex-auditorium': {
-      id: 'apex-auditorium',
-      name: 'APEX Auditorium',
-      capacity: 1000,
-      location: 'APEX Block',
-      description: 'State-of-the-art auditorium used for graduation ceremonies, first year inauguration, fresher\'s party, felicitation functions, alumni events, and major department level events.',
-      amenities: ['Large LED Screen', 'Professional Sound System', 'Stage Lighting', 'Green Room', 'Wi-Fi', 'Air Conditioning', 'Parking'],
-      images: ['/images/halls/apex-auditorium.jpg'],
-      isAvailable: true,
-      pricePerHour: 2000
-    },
-    // ESB Seminar Halls
-    'esb-hall-1': {
-      id: 'esb-hall-1',
-      name: 'ESB Seminar Hall - I',
-      capacity: 315,
-      location: 'Engineering Sciences Block (ESB)',
-      description: 'Large seminar hall in the Engineering Sciences Block, perfect for department events, presentations, and academic sessions.',
-      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Podium'],
-      images: ['/images/halls/esb-seminar-hall-1.jpg'],
-      isAvailable: true,
-      pricePerHour: 1200
-    },
-    'esb-hall-2': {
-      id: 'esb-hall-2',
-      name: 'ESB Seminar Hall - II',
-      capacity: 140,
-      location: 'Engineering Sciences Block (ESB)',
-      description: 'Medium-sized seminar hall ideal for focused academic sessions, workshops, and department meetings.',
-      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
-      images: ['/images/halls/esb-seminar-hall-2.jpg'],
-      isAvailable: true,
-      pricePerHour: 800
-    },
-    'esb-hall-3': {
-      id: 'esb-hall-3',
-      name: 'ESB Seminar Hall - III',
-      capacity: 200,
-      location: 'Engineering Sciences Block (ESB)',
-      description: 'Versatile seminar hall perfect for workshops, academic events, and department presentations.',
-      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
-      images: ['/images/halls/esb-seminar-hall-3.jpg'],
-      isAvailable: true,
-      pricePerHour: 1000
-    },
-    // DES Seminar Halls
-    'des-hall-1': {
-      id: 'des-hall-1',
-      name: 'DES Seminar Hall - I',
-      capacity: 200,
-      location: 'Department of Engineering Sciences (DES)',
-      description: 'Modern seminar facility with advanced audio-visual systems, perfect for technology-enhanced learning and presentations.',
-      amenities: ['Advanced Projector', 'Interactive Whiteboard', 'Sound System', 'Wi-Fi', 'Video Conferencing'],
-      images: ['/images/halls/des-seminar-hall-1.jpg'],
-      isAvailable: true,
-      pricePerHour: 1000
-    },
-    'des-hall-2': {
-      id: 'des-hall-2',
-      name: 'DES Seminar Hall - II',
-      capacity: 150,
-      location: 'Department of Engineering Sciences (DES)',
-      description: 'Collaborative learning environment perfect for seminars, workshops, and interactive academic sessions.',
-      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
-      images: ['/images/halls/des-seminar-hall-2.jpg'],
-      isAvailable: true,
-      pricePerHour: 800
-    },
-    // LHC Seminar Halls
-    'lhc-hall-1': {
-      id: 'lhc-hall-1',
-      name: 'LHC Seminar Hall - I',
-      capacity: 115,
-      location: 'Lecture Hall Complex (LHC)',
-      description: 'Intimate learning space in the Lecture Hall Complex, ideal for focused discussions and smaller academic events.',
-      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
-      images: ['/images/halls/lhc-seminar-hall-1.jpg'],
-      isAvailable: true,
-      pricePerHour: 600
-    },
-    'lhc-hall-2': {
-      id: 'lhc-hall-2',
-      name: 'LHC Seminar Hall - II',
-      capacity: 115,
-      location: 'Lecture Hall Complex (LHC)',
-      description: 'Interactive learning environment perfect for seminars, workshops, and collaborative academic sessions.',
-      amenities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
-      images: ['/images/halls/lhc-seminar-hall-2.jpg'],
-      isAvailable: true,
-      pricePerHour: 600
+    if (!response.ok) {
+      throw new Error('Hall not found');
     }
-  }
 
-  return halls[id as HallId] || halls['apex-auditorium']
+    const data = await response.json();
+    
+    // Transform the data to match our Hall interface
+    return {
+      id: data.frontendId || data._id || data.id,
+      name: data.name,
+      capacity: data.capacity,
+      location: data.location,
+      description: data.description || 'No description available',
+      amenities: data.facilities || [],
+      images: data.images || ['/images/halls/default-hall.jpg'],
+      isAvailable: data.isAvailable !== false,
+      pricePerHour: data.pricePerHour || 1000 // Default price if not set
+    };
+  } catch (error) {
+    console.error('Error fetching hall details:', error);
+    throw new Error('Failed to fetch hall details');
+  }
 }
 
-export default async function HallDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const hall = getHallDetails(id)
+export default async function HallDetailsPage({ params }: { params: { id: string } }) {
+  let hall: Hall;
+  
+  try {
+    hall = await getHallDetails(params.id);
+  } catch (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Hall Not Found</h1>
+          <p className="text-gray-600 mb-8">The hall you're looking for doesn't exist or has been removed.</p>
+          <Link 
+            href="/halls"
+            className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Back to Halls
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -159,15 +110,14 @@ export default async function HallDetailsPage({ params }: { params: Promise<{ id
           </ol>
         </nav>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden" data-cy="hall-details">
-          {/* Hall Image */}
-          <div className="h-64 bg-gray-200">
+        <div className="max-w-7xl mx-auto bg-white shadow-sm rounded-lg overflow-hidden">
+          {/* Image Gallery */}
+          <div className="relative h-96 bg-gray-200">
             <Image
               src={hall.images[0]}
               alt={hall.name}
-              width={800}
-              height={256}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
               priority
             />
           </div>
@@ -214,58 +164,38 @@ export default async function HallDetailsPage({ params }: { params: Promise<{ id
 
             {/* Amenities */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Amenities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {hall.amenities.map((amenity: string, index: number) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
-                    <span className="text-gray-700">{amenity}</span>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Amenities</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {hall.amenities.map((amenity, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-center space-x-2 text-gray-600"
+                  >
+                    <span>✓</span>
+                    <span>{amenity}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Booking Section */}
-            <div className="border-t pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  className={`flex-1 py-3 px-6 rounded-md font-medium text-lg ${
-                    hall.isAvailable
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                  disabled={!hall.isAvailable}
-                  data-cy="book-hall-button"
-                  onClick={() => {
-                    if (hall.isAvailable) {
-                      // Simulate navigation to booking form
-                      alert('Redirecting to booking form...')
-                    }
-                  }}
-                >
-                  {hall.isAvailable ? 'Book This Hall' : 'Currently Unavailable'}
-                </button>
-                <button 
-                  className="px-6 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium"
-                  onClick={() => alert('Check availability calendar would open here')}
-                >
-                  Check Availability
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                href={`/book/${hall.id}`}
+                className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg text-center font-medium hover:bg-blue-700 transition-colors"
+              >
+                Book Now
+              </Link>
+              <Link
+                href="/halls"
+                className="flex-1 bg-gray-100 text-gray-800 px-6 py-3 rounded-lg text-center font-medium hover:bg-gray-200 transition-colors"
+              >
+                Back to Halls
+              </Link>
             </div>
           </div>
         </div>
-
-        {/* Back to Halls */}
-        <div className="mt-8">
-          <Link 
-            href="/halls" 
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
-          >
-            ← Back to All Halls
-          </Link>
-        </div>
       </main>
     </div>
-  )
+  );
 }

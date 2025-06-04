@@ -6,6 +6,14 @@ interface AuthRequest extends Request {
   user?: any;
 }
 
+// Helper function to generate frontendId from name
+function generateFrontendId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric characters with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+}
+
 export const createHall = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, capacity, location, facilities, description, images } = req.body;
@@ -23,17 +31,27 @@ export const createHall = async (req: AuthRequest, res: Response): Promise<void>
       return;
     }
 
+    // Generate frontendId from name
+    const frontendId = generateFrontendId(name);
+
+    // Check if frontendId already exists
+    const existingFrontendId = await Hall.findOne({ frontendId });
+    if (existingFrontendId) {
+      res.status(400).json({ message: 'Hall with similar name already exists' });
+      return;
+    }
+
     const hallData = {
       name,
-      capacity: parseInt(capacity),
+      capacity: parseInt(capacity as string),
       location,
       facilities: facilities || [],
       description: description || '',
-      images: images || []
+      images: images || [],
+      frontendId
     };
 
     const hall = await Hall.create(hallData);
-
     console.log(`✅ Hall created: ${name} by ${req.user?.name || 'Admin'}`);
     res.status(201).json(hall);
   } catch (error: any) {
@@ -56,13 +74,28 @@ export const getHalls = async (req: Request, res: Response): Promise<void> => {
 
 export const getHallById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const hall = await Hall.findById(req.params.id);
+    console.log('🔍 Getting hall by ID:', req.params.id);
+    
+    // Try to find by MongoDB _id first
+    let hall = await Hall.findById(req.params.id);
+    console.log('📦 MongoDB _id search result:', hall ? '✅ Found' : '❌ Not found');
+    
+    // If not found, try to find by frontendId
     if (!hall) {
+      hall = await Hall.findOne({ frontendId: req.params.id });
+      console.log('📦 frontendId search result:', hall ? '✅ Found' : '❌ Not found');
+    }
+
+    if (!hall) {
+      console.log('❌ Hall not found with either _id or frontendId');
       res.status(404).json({ message: 'Hall not found' });
       return;
     }
+    
+    console.log('✅ Hall found:', { id: hall._id, name: hall.name, frontendId: hall.frontendId });
     res.json(hall);
   } catch (error) {
+    console.error('❌ Error getting hall:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -72,8 +105,14 @@ export const updateHall = async (req: AuthRequest, res: Response): Promise<void>
     const { name, capacity, location, facilities, description, images } = req.body;
     const hallId = req.params.id;
 
-    // Check if hall exists
-    const existingHall = await Hall.findById(hallId);
+    // Try to find by MongoDB _id first
+    let existingHall = await Hall.findById(hallId);
+    
+    // If not found, try to find by frontendId
+    if (!existingHall) {
+      existingHall = await Hall.findOne({ frontendId: hallId });
+    }
+
     if (!existingHall) {
       res.status(404).json({ message: 'Hall not found' });
       return;
@@ -81,7 +120,7 @@ export const updateHall = async (req: AuthRequest, res: Response): Promise<void>
 
     // If name is being changed, check for duplicates
     if (name && name !== existingHall.name) {
-      const duplicateHall = await Hall.findOne({ name, _id: { $ne: hallId } });
+      const duplicateHall = await Hall.findOne({ name, _id: { $ne: existingHall._id } });
       if (duplicateHall) {
         res.status(400).json({ message: 'Hall with this name already exists' });
         return;
@@ -98,12 +137,12 @@ export const updateHall = async (req: AuthRequest, res: Response): Promise<void>
     if (images) updateData.images = images;
 
     // Update the hall
-    const hall = await Hall.findByIdAndUpdate(hallId, updateData, {
+    const hall = await Hall.findByIdAndUpdate(existingHall._id, updateData, {
       new: true,
       runValidators: true,
     });
 
-    console.log(`✅ Hall updated: ${hall?.name} (ID: ${hallId}) by ${req.user?.name || 'Admin'}`);
+    console.log(`✅ Hall updated: ${hall?.name} (ID: ${hall?._id}, frontendId: ${hall?.frontendId}) by ${req.user?.name || 'Admin'}`);
     res.json({
       message: 'Hall updated successfully',
       hall
@@ -121,15 +160,21 @@ export const deleteHall = async (req: AuthRequest, res: Response): Promise<void>
   try {
     const hallId = req.params.id;
 
-    // Check if hall exists
-    const hall = await Hall.findById(hallId);
+    // Try to find by MongoDB _id first
+    let hall = await Hall.findById(hallId);
+    
+    // If not found, try to find by frontendId
+    if (!hall) {
+      hall = await Hall.findOne({ frontendId: hallId });
+    }
+
     if (!hall) {
       res.status(404).json({ message: 'Hall not found' });
       return;
     }
 
     // Check for existing bookings
-    const existingBookings = await Booking.find({ hall: hallId });
+    const existingBookings = await Booking.find({ hall: hall._id });
     const activeBookings = existingBookings.filter(booking =>
       booking.status === 'approved' || booking.status === 'pending'
     );
@@ -143,12 +188,12 @@ export const deleteHall = async (req: AuthRequest, res: Response): Promise<void>
     }
 
     // Delete the hall
-    await Hall.findByIdAndDelete(hallId);
+    await Hall.findByIdAndDelete(hall._id);
 
     // Delete all associated bookings (cancelled/rejected ones)
-    const deletedBookings = await Booking.deleteMany({ hall: hallId });
+    const deletedBookings = await Booking.deleteMany({ hall: hall._id });
 
-    console.log(`✅ Hall deleted: ${hall.name} (ID: ${hallId}) by ${req.user?.name || 'Admin'}`);
+    console.log(`✅ Hall deleted: ${hall.name} (ID: ${hall._id}, frontendId: ${hall.frontendId}) by ${req.user?.name || 'Admin'}`);
     console.log(`✅ Deleted ${deletedBookings.deletedCount} associated bookings`);
 
     res.json({
@@ -213,7 +258,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'APEX Block',
         facilities: ['Large LED Screen', 'Professional Sound System', 'Stage Lighting', 'Green Room', 'Wi-Fi', 'Air Conditioning', 'Parking'],
         description: 'Large auditorium for major events',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'apex-auditorium'
       },
       {
         name: 'ESB Seminar Hall - I',
@@ -221,7 +267,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'Engineering Sciences Block (ESB)',
         facilities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Podium'],
         description: 'Seminar hall in ESB',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'esb-hall-1'
       },
       {
         name: 'ESB Seminar Hall - II',
@@ -229,7 +276,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'Engineering Sciences Block (ESB)',
         facilities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Podium'],
         description: 'Seminar hall in ESB',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'esb-hall-2'
       },
       {
         name: 'ESB Seminar Hall - III',
@@ -237,7 +285,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'Engineering Sciences Block (ESB)',
         facilities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
         description: 'Smaller seminar hall in ESB',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'esb-hall-3'
       },
       {
         name: 'DES Seminar Hall - I',
@@ -245,7 +294,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'Department of Engineering Sciences (DES)',
         facilities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Whiteboard'],
         description: 'Seminar hall in DES',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'des-hall-1'
       },
       {
         name: 'DES Seminar Hall - II',
@@ -253,7 +303,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'Department of Engineering Sciences (DES)',
         facilities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning', 'Whiteboard'],
         description: 'Seminar hall in DES',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'des-hall-2'
       },
       {
         name: 'LHC Seminar Hall - I',
@@ -261,7 +312,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'Lecture Hall Complex (LHC)',
         facilities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
         description: 'Seminar hall in LHC',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'lhc-hall-1'
       },
       {
         name: 'LHC Seminar Hall - II',
@@ -269,7 +321,8 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
         location: 'Lecture Hall Complex (LHC)',
         facilities: ['Projector', 'Sound System', 'Wi-Fi', 'Air Conditioning'],
         description: 'Seminar hall in LHC',
-        isAvailable: true
+        isAvailable: true,
+        frontendId: 'lhc-hall-2'
       }
     ];
 
@@ -292,6 +345,49 @@ export const populateHalls = async (req: Request, res: Response): Promise<void> 
       message: 'Server error',
       error: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+export const migrateHallsFrontendIds = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Get all halls that don't have a frontendId
+    const halls = await Hall.find({ frontendId: { $exists: false } });
+    console.log(`Found ${halls.length} halls without frontendId`);
+
+    let updated = 0;
+    for (const hall of halls) {
+      // Generate frontendId from name
+      let frontendId = hall.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
+
+      // Check if frontendId already exists
+      const existingFrontendId = await Hall.findOne({ frontendId });
+      if (existingFrontendId && existingFrontendId._id.toString() !== hall._id.toString()) {
+        // If exists and it's not the current hall, append a number to make it unique
+        const count = await Hall.countDocuments({ frontendId: new RegExp(`^${frontendId}(-\\d+)?$`) });
+        frontendId = `${frontendId}-${count + 1}`;
+      }
+
+      // Update the hall with the new frontendId
+      await Hall.findByIdAndUpdate(hall._id, { frontendId });
+      updated++;
+      console.log(`✅ Updated hall: ${hall.name} with frontendId: ${frontendId}`);
+    }
+
+    res.json({
+      message: `Successfully updated ${updated} halls with frontendId`,
+      updatedCount: updated,
+      totalHalls: halls.length
+    });
+  } catch (error) {
+    console.error('❌ Error migrating halls:', error);
+    res.status(500).json({
+      message: 'Server error',
+      error: (error as Error).message
     });
   }
 };

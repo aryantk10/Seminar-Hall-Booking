@@ -10,6 +10,9 @@ datasources:
     editable: true
     jsonData:
       timeInterval: "15s"
+      queryTimeout: 60s
       httpMethod: POST
-    secureJsonData:
-      httpHeaderValue1: '' 
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: prometheus
+    version: 1 

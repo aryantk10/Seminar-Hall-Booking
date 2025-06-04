@@ -95,14 +95,29 @@ interface HallData {
   images?: string[];
 }
 
+import { transformBackendHall, syncHallsToLocalStorage, type BackendHall } from './hallUtils';
+
 export const halls = {
-  getAll: () => api.get('/halls'),
-  getById: (id: string) => api.get(`/halls/${id}`),
+  getAll: async () => {
+    const response = await api.get<BackendHall[]>('/halls');
+    const transformedHalls = response.data.map(transformBackendHall);
+    syncHallsToLocalStorage(transformedHalls);
+    return { ...response, data: transformedHalls };
+  },
+  getById: async (id: string) => {
+    console.log('🔍 Fetching hall with ID:', id);
+    const response = await api.get<BackendHall>(`/halls/${id}`);
+    console.log('📦 Backend response:', response.data);
+    const transformedHall = transformBackendHall(response.data);
+    console.log('✨ Transformed hall:', transformedHall);
+    return { ...response, data: transformedHall };
+  },
   create: (data: HallData) => api.post('/halls', data),
   update: (id: string, data: Partial<HallData>) => api.put(`/halls/${id}`, data),
   delete: (id: string) => api.delete(`/halls/${id}`),
   checkAvailability: (id: string, startDate: string, endDate: string) =>
     api.get(`/halls/${id}/availability`, { params: { startDate, endDate } }),
+  migrateHallsFrontendIds: () => api.post('/halls/migrate-frontend-ids')
 };
 
 // Bookings API

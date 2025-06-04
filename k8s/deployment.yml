@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seminar-hall-booking
+  labels:
+    app: seminar-hall-booking
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: seminar-hall-booking
+  template:
+    metadata:
+      labels:
+        app: seminar-hall-booking
+    spec:
+      containers:
+      - name: seminar-hall-booking
+        image: ghcr.io/your-username/seminar-hall-booking:latest
+        ports:
+        - containerPort: 3000
+          name: frontend
+        - containerPort: 5000
+          name: backend
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: uri
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: jwt-secret
+              key: token
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi" 

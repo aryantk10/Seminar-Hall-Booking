@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -134,7 +133,7 @@ export default function BookingForm({ hall, existingBookings = [] }: BookingForm
     try {
       // Create booking data for API
       const bookingData = {
-        hallId: hall.id,
+        hallId: hall.frontendId,
         startDate: values.date.toISOString(),
         endDate: values.date.toISOString(), // Same day
         purpose: values.purpose,

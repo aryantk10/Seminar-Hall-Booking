@@ -34,7 +34,7 @@ services:
       - "9002:9002"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=https://seminar-hall-booking-backend.onrender.com/api
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
     depends_on:
       - backend
     networks:

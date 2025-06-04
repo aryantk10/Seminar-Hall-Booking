@@ -10,17 +10,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { HallForm } from '@/components/admin/HallForm';
 import { DeleteHallDialog } from '@/components/admin/DeleteHallDialog';
-
-interface Hall {
-  _id: string;
-  name: string;
-  capacity: number;
-  location: string;
-  facilities: string[];
-  description?: string;
-  images?: string[];
-  isAvailable: boolean;
-}
+import type { Hall } from '@/lib/types';
 
 interface ApiError {
   response?: {
@@ -95,7 +85,20 @@ export default function AdminHallsPage() {
         capacity: typeof hallData.capacity === 'string' ? parseInt(hallData.capacity) : hallData.capacity
       };
       const response = await hallsAPI.create(processedData);
-      console.log('✅ Hall created successfully:', response.data);
+      const backendHall = response.data;
+      console.log('✅ Hall created successfully:', backendHall);
+
+      // Convert the response data to match frontend Hall type
+      const newHall: Hall = {
+        id: backendHall._id,
+        frontendId: backendHall.frontendId,
+        name: backendHall.name,
+        block: backendHall.location,
+        capacity: backendHall.capacity,
+        amenities: backendHall.facilities,
+        image: backendHall.images?.[0],
+        dataAiHint: backendHall.capacity > 500 ? 'large auditorium' : 'seminar hall'
+      };
 
       toast({
         title: "Success",
@@ -150,8 +153,8 @@ export default function AdminHallsPage() {
     if (!selectedHall) return;
 
     try {
-      console.log('🗑️ Deleting hall:', selectedHall._id);
-      const response = await hallsAPI.delete(selectedHall._id);
+      console.log('🗑️ Deleting hall:', selectedHall.name);
+      const response = await hallsAPI.delete(selectedHall.frontendId);
       console.log('✅ Hall deleted successfully:', response.data);
 
       toast({
@@ -342,7 +345,7 @@ export default function AdminHallsPage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-600">No halls found. Create your first hall!</p>
+          <p className="text-gray-600">You haven&apos;t created any halls yet. Click &apos;Add New Hall&apos; to get started.</p>
         )}
       </div>
 

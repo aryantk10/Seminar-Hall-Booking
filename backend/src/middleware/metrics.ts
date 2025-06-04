@@ -1,8 +1,15 @@
 import promBundle from 'express-prom-bundle';
-import { Registry, Counter, Gauge, Histogram, Summary } from 'prom-client';
+import { Registry, Counter, Gauge, Histogram, Summary, collectDefaultMetrics } from 'prom-client';
 
 // Create a new registry
 const register = new Registry();
+
+// Initialize default Node.js metrics
+collectDefaultMetrics({
+    register,
+    prefix: 'nodejs_',
+    gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5]
+});
 
 // Business metrics
 export const bookingCounter = new Counter({

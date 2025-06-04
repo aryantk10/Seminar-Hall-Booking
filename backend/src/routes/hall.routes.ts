@@ -7,7 +7,8 @@ import {
   updateHall,
   deleteHall,
   getHallAvailability,
-  populateHalls
+  populateHalls,
+  migrateHallsFrontendIds
 } from '../controllers/hall.controller';
 
 const router = express.Router();
@@ -16,6 +17,7 @@ const router = express.Router();
 router.get('/', getHalls);
 router.get('/:id', getHallById);
 router.get('/:id/availability', getHallAvailability);
+router.post('/migrate-frontend-ids', migrateHallsFrontendIds); // Temporarily public for migration
 
 // Test route
 router.get('/test', (req, res) => {

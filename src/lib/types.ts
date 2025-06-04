@@ -1,5 +1,6 @@
 export interface Hall {
-  id: string;
+  id: string;  // MongoDB _id
+  frontendId: string;  // URL-friendly ID
   name: string;
   block: string;
   capacity?: number;

@@ -1,4 +1,3 @@
-
 "use client";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,29 +18,11 @@ export default function HallCard({ hall }: HallCardProps) {
   const imageHeight = 400;
   const placeholderImageSrc = `https://placehold.co/${imageWidth}x${imageHeight}.png`;
 
-  // Map hall names to frontend IDs for booking system compatibility
-  const getBookingId = (hallName: string): string => {
-    const nameToIdMap: { [key: string]: string } = {
-      'APEX Auditorium': 'apex-auditorium',
-      'ESB Seminar Hall - I': 'esb-hall-1',
-      'ESB Seminar Hall - II': 'esb-hall-2',
-      'ESB Seminar Hall - III': 'esb-hall-3',
-      'DES Seminar Hall - I': 'des-hall-1',
-      'DES Seminar Hall - II': 'des-hall-2',
-      'LHC Seminar Hall - I': 'lhc-hall-1',
-      'LHC Seminar Hall - II': 'lhc-hall-2'
-    };
-
-    return nameToIdMap[hallName] || hall.id;
-  };
-
-  const bookingId = getBookingId(hall.name);
-
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       {/* This Link wraps the visual content that should navigate for everyone */}
       <Link
-        href={`/dashboard/book/${bookingId}`}
+        href={`/dashboard/book/${hall.frontendId}`}
         className="block flex-grow flex flex-col focus:outline-none focus:ring-2 focus:ring-primary rounded-t-lg"
         aria-label={`View details for ${hall.name}`}
       >
@@ -96,7 +77,7 @@ export default function HallCard({ hall }: HallCardProps) {
       {user && user.role !== 'admin' && (
         <CardFooter className="p-6 pt-0 border-t">
           <Button asChild className="w-full">
-            <Link href={`/dashboard/book/${bookingId}`}>
+            <Link href={`/dashboard/book/${hall.frontendId}`}>
               Book Now <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

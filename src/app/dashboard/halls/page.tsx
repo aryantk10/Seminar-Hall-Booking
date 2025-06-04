@@ -1,22 +1,21 @@
-
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import HallCard from "@/components/hall/HallCard";
-import { halls as defaultHallsData, allPossibleAmenities } from "@/lib/data";
 import { halls as hallsAPI } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Search, ListFilter, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import type { Hall } from "@/lib/types";
-
-const HALL_CONFIG_STORAGE_KEY = "hallHubConfiguredHalls";
+import { allPossibleAmenities } from "@/lib/data";
 
 interface DatabaseHall {
   _id: string;
+  frontendId?: string;
   name: string;
   capacity: number;
   location: string;
@@ -27,91 +26,63 @@ interface DatabaseHall {
 }
 
 export default function HallsPage() {
-  const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [currentHallsData, setCurrentHallsData] = useState<Hall[]>(defaultHallsData);
+  const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
-  const [useRealData, setUseRealData] = useState(false);
-
-  // Convert database hall to frontend hall format
-  const convertDatabaseHall = (dbHall: DatabaseHall): Hall => ({
-    id: dbHall._id,
-    name: dbHall.name,
-    block: dbHall.location,
-    capacity: dbHall.capacity,
-    image: dbHall.images?.[0] || '/images/halls/default-hall.jpg',
-    dataAiHint: dbHall.capacity > 500 ? 'large auditorium' : 'seminar hall',
-    amenities: dbHall.facilities || []
-  });
-
-  // Fetch real halls from database
-  const fetchRealHalls = useCallback(async () => {
-    try {
-      setLoading(true);
-      console.log('🏢 Fetching real halls from database...');
-      const response = await hallsAPI.getAll();
-      const dbHalls = response.data as DatabaseHall[];
-      const convertedHalls = dbHalls.map(convertDatabaseHall);
-      setCurrentHallsData(convertedHalls);
-      setUseRealData(true);
-      console.log(`✅ Loaded ${convertedHalls.length} real halls from database`);
-    } catch (error) {
-      console.error('❌ Error fetching real halls:', error);
-      console.log('📋 Falling back to mock data');
-      setCurrentHallsData(defaultHallsData);
-      setUseRealData(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Try to fetch real halls first, fallback to localStorage/mock data
-    fetchRealHalls();
-  }, [fetchRealHalls]);
-
-  useEffect(() => {
-    // Only use localStorage for mock data fallback
-    if (!useRealData) {
-      const storedHallsString = localStorage.getItem(HALL_CONFIG_STORAGE_KEY);
-      if (storedHallsString) {
-        try {
-          setCurrentHallsData(JSON.parse(storedHallsString));
+    const fetchHalls = async () => {
+      try {
+        const response = await hallsAPI.getAll();
+        const fetchedHalls = (response.data as DatabaseHall[]).map(hall => ({
+          id: hall.frontendId || hall._id,
+          name: hall.name,
+          capacity: hall.capacity,
+          block: hall.location,
+          amenities: hall.facilities || [],
+          image: hall.images?.[0] || '/images/halls/default-hall.jpg',
+          isAvailable: hall.isAvailable
+        }));
+        setHalls(fetchedHalls);
         } catch (error) {
-          console.error("Failed to parse configured halls from localStorage", error);
-          localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultHallsData));
-          setCurrentHallsData(defaultHallsData);
-        }
-      } else {
-        localStorage.setItem(HALL_CONFIG_STORAGE_KEY, JSON.stringify(defaultHallsData));
-        setCurrentHallsData(defaultHallsData);
+        console.error('Failed to fetch halls:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load halls. Please try again later.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [useRealData]);
+    };
 
+    fetchHalls();
+  }, [toast]);
 
   const filteredHalls = useMemo(() => {
-    let hallsToFilter = currentHallsData;
+    let hallsToFilter = halls;
 
     // Apply search term filter
-    if (searchTerm) {
+    if (searchQuery) {
       hallsToFilter = hallsToFilter.filter(hall =>
-        hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        hall.block.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (hall.amenities && hall.amenities.some(amenity => amenity.toLowerCase().includes(searchTerm.toLowerCase())))
+        hall.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        hall.block.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (hall.amenities && hall.amenities.some(amenity => amenity.toLowerCase().includes(searchQuery.toLowerCase())))
       );
     }
 
-    // Apply amenity filter (hall must have ALL selected amenities)
+    // Apply amenities filter
     if (selectedAmenities.length > 0) {
       hallsToFilter = hallsToFilter.filter(hall =>
-        selectedAmenities.every(sa => hall.amenities?.includes(sa))
+        selectedAmenities.every(amenity => hall.amenities?.includes(amenity))
       );
     }
 
     return hallsToFilter;
-  }, [searchTerm, currentHallsData, selectedAmenities]);
+  }, [searchQuery, halls, selectedAmenities]);
 
   const handleAmenitySelection = (amenity: string, checked: boolean) => {
     setSelectedAmenities(prev =>
@@ -141,11 +112,6 @@ export default function HallsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Seminar Halls</h1>
           <p className="text-muted-foreground">
             Browse and select a hall for your event. Search or filter by amenities.
-            {useRealData ? (
-              <span className="text-green-600 font-medium"> (Live data from database)</span>
-            ) : (
-              <span className="text-orange-600 font-medium"> (Using fallback data)</span>
-            )}
           </p>
         </div>
         <div className="flex w-full flex-col sm:flex-row md:w-auto gap-2 items-center">
@@ -162,8 +128,8 @@ export default function HallsPage() {
             <Input
               placeholder="Search halls..."
               className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <DropdownMenu>
