@@ -31,7 +31,7 @@ interface BackendHall {
   images?: string[];
 }
 
-interface HallFormData {
+interface HallData {
   name: string;
   capacity: number | string;
   location: string;
@@ -87,12 +87,12 @@ export default function AdminHallsPage() {
     }
   }, [fetchHalls, user]);
 
-  const handleCreateHall = async (hallData: HallFormData) => {
+  const handleCreateHall = async (hallData: HallData) => {
     try {
       console.log('📝 Creating new hall:', hallData);
       const processedData = {
         ...hallData,
-        capacity: typeof hallData.capacity === 'string' ? parseInt(hallData.capacity) : hallData.capacity
+        capacity: Number(hallData.capacity)
       };
       const response = await hallsAPI.create(processedData);
       const backendHall = response.data as BackendHall;
@@ -127,16 +127,16 @@ export default function AdminHallsPage() {
     }
   };
 
-  const handleUpdateHall = async (hallData: HallFormData) => {
+  const handleUpdateHall = async (hallData: HallData) => {
     if (!selectedHall) return;
 
     try {
-      console.log('📝 Updating hall:', selectedHall._id, hallData);
+      console.log('📝 Updating hall:', selectedHall.id, hallData);
       const processedData = {
         ...hallData,
-        capacity: typeof hallData.capacity === 'string' ? parseInt(hallData.capacity) : hallData.capacity
+        capacity: Number(hallData.capacity)
       };
-      const response = await hallsAPI.update(selectedHall._id, processedData);
+      const response = await hallsAPI.update(selectedHall.id, processedData);
       console.log('✅ Hall updated successfully:', response.data);
 
       toast({
@@ -321,31 +321,33 @@ export default function AdminHallsPage() {
         {halls.length > 0 ? (
           <div className="space-y-4">
             {halls.map((hall) => (
-              <div key={hall._id} className="bg-white border rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-lg">{hall.name}</h3>
-                    <p className="text-gray-600">Capacity: {hall.capacity}</p>
-                    <p className="text-gray-600">Location: {hall.location}</p>
-                    {hall.facilities && hall.facilities.length > 0 && (
-                      <p className="text-gray-600">Facilities: {hall.facilities.join(', ')}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
+              <div
+                key={hall.id}
+                className="bg-white shadow-lg rounded-lg overflow-hidden"
+              >
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold mb-2">{hall.name}</h3>
+                  <p className="text-gray-600 mb-4">
+                    Block: {hall.block}<br />
+                    Capacity: {hall.capacity}<br />
+                    Amenities: {hall.amenities.join(', ') || 'None'}
+                  </p>
+                  <div className="flex space-x-2">
                     <Button
-                      size="sm"
                       variant="outline"
+                      size="sm"
                       onClick={() => openEditDialog(hall)}
                     >
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
                     <Button
+                      variant="outline"
                       size="sm"
-                      variant="destructive"
+                      className="text-red-600 hover:text-red-700"
                       onClick={() => openDeleteDialog(hall)}
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
+                      <Trash2 className="h-4 w-4 mr-2" />
                       Delete
                     </Button>
                   </div>
@@ -358,40 +360,49 @@ export default function AdminHallsPage() {
         )}
       </div>
 
-      {/* Create Hall Dialog */}
+      {/* Create Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Hall</DialogTitle>
             <DialogDescription>
-              Add a new seminar hall or auditorium to the system.
+              Fill in the details below to create a new hall.
             </DialogDescription>
           </DialogHeader>
-          <HallForm onSubmit={handleCreateHall} />
+          <HallForm
+            onSubmit={handleCreateHall}
+            initialData={{
+              name: '',
+              capacity: '',
+              location: '',
+              facilities: [],
+              description: '',
+              images: []
+            }}
+          />
         </DialogContent>
       </Dialog>
 
       {/* Edit Hall Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Hall</DialogTitle>
             <DialogDescription>
-              Update the hall information below.
+              Make changes to the hall information below.
             </DialogDescription>
           </DialogHeader>
           {selectedHall && (
             <HallForm
+              onSubmit={handleUpdateHall}
               initialData={{
                 name: selectedHall.name,
-                capacity: selectedHall.capacity,
-                location: selectedHall.location,
-                facilities: selectedHall.facilities || [],
+                capacity: selectedHall.capacity.toString(),
+                location: selectedHall.block,
+                facilities: selectedHall.amenities,
                 description: selectedHall.description || '',
-                images: selectedHall.images || []
+                images: selectedHall.image ? [selectedHall.image] : []
               }}
-              onSubmit={handleUpdateHall}
-              isEditing={true}
             />
           )}
         </DialogContent>

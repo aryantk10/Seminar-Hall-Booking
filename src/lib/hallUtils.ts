@@ -22,15 +22,16 @@ export function transformBackendHall(backendHall: BackendHall): Hall {
     name: backendHall.name
   });
   
-  const transformedHall = {
+  const transformedHall: Hall = {
     id: backendHall._id,
     frontendId: backendHall.frontendId,
     name: backendHall.name,
     block: backendHall.location,
     capacity: backendHall.capacity,
-    amenities: backendHall.facilities,
-    image: backendHall.images?.[0], // Use first image if available
-    dataAiHint: backendHall.description
+    amenities: backendHall.facilities || [],
+    image: backendHall.images?.[0],
+    dataAiHint: backendHall.capacity > 500 ? 'large auditorium' : 'seminar hall',
+    description: backendHall.description
   };
   
   console.log('✨ Transformed result:', transformedHall);

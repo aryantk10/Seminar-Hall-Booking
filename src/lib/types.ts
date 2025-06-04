@@ -2,11 +2,12 @@ export interface Hall {
   id: string;  // MongoDB _id
   frontendId: string;  // URL-friendly ID
   name: string;
-  block: string;
-  capacity?: number;
+  block: string;  // This maps to location in the backend
+  capacity: number;  // Making this required since it's required in forms
   image?: string;
   dataAiHint?: string;
-  amenities?: string[]; // Added
+  amenities: string[];  // Making this required since we always provide a default empty array
+  description?: string;  // Added to match form data
 }
 
 export interface Booking {
