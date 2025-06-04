@@ -37,17 +37,19 @@ export default function HallsPage() {
     const fetchHalls = async () => {
       try {
         const response = await hallsAPI.getAll();
-        const fetchedHalls = (response.data as DatabaseHall[]).map(hall => ({
-          id: hall.frontendId || hall._id,
+        const backendHalls = response.data as unknown as DatabaseHall[];
+        const fetchedHalls: Hall[] = backendHalls.map(hall => ({
+          id: hall._id,
+          frontendId: hall.frontendId || hall._id,
           name: hall.name,
           capacity: hall.capacity,
           block: hall.location,
           amenities: hall.facilities || [],
           image: hall.images?.[0] || '/images/halls/default-hall.jpg',
-          isAvailable: hall.isAvailable
+          dataAiHint: hall.capacity > 500 ? 'large auditorium' : 'seminar hall'
         }));
         setHalls(fetchedHalls);
-        } catch (error) {
+      } catch (error) {
         console.error('Failed to fetch halls:', error);
         toast({
           title: 'Error',

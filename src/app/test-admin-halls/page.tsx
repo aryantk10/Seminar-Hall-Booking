@@ -75,7 +75,7 @@ export default function TestAdminHallsPage() {
       // Test 2: Fetch Halls
       console.log('🧪 Test 2: Fetching halls...');
       const fetchResponse = await hallsAPI.getAll();
-      const hallsList = fetchResponse.data as HallResponse[];
+      const hallsList = fetchResponse.data as unknown as HallResponse[];
       if (hallsList && Array.isArray(hallsList)) {
         const hallCount = hallsList.length;
         const foundTestHall = hallsList.some((h: HallResponse) => h._id === createdHall._id);
